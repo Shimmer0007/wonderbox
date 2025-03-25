@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shimmer的小站 - 我的收藏夹</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        nav {
+            background-color: #3498db;
+            padding: 1rem;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        nav ul li {
+            margin: 0 1rem;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            color: #ecf0f1;
+        }
+        
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .category {
+            margin-bottom: 3rem;
+        }
+        
+        .category h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .subcategory {
+            margin-bottom: 2rem;
+        }
+        
+        .subcategory h3 {
+            color: #3498db;
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+            border-left: 3px solid #3498db;
+        }
+        
+        .bookmark {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            background-color: white;
+            border-radius: 5px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .bookmark:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .bookmark-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #3498db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .bookmark-info h4 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+        
+        .bookmark-info p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .bookmark-info a {
+            color: #3498db;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        
+        .bookmark-info a:hover {
+            text-decoration: underline;
+        }
+        
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            nav ul {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav ul li {
+                margin: 0.5rem 0;
+            }
+            
+            .bookmark {
+                flex-direction: column;
+            }
+            
+            .bookmark-icon {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>Shimmer的小站</h1>
+        <p>我的个人收藏夹</p>
+    </header>
+    
+    <nav>
+        <ul>
+            <li><a href="#design">设计资源</a></li>
+            <li><a href="#development">开发工具</a></li>
+            <li><a href="#learning">学习资源</a></li>
+            <li><a href="#entertainment">娱乐休闲</a></li>
+            <li><a href="#utilities">实用工具</a></li>
+        </ul>
+    </nav>
+    
+    <main>
+        <section id="design" class="category">
+            <h2>设计资源</h2>
+            
+            <div class="subcategory">
+                <h3>UI/UX设计</h3>
+                <div class="bookmark">
+                    <div class="bookmark-icon">D</div>
+                    <div class="bookmark-info">
+                        <h4>Designspiration</h4>
+                        <p>获取创意设计灵感</p>
+                        <a href="https://designspiration.net/" target="_blank">designspiration.net</a>
+                    </div>
+                </div>
+                
+                <div class="bookmark">
+                    <div class="bookmark-icon">A</div>
+                    <div class="bookmark-info">
+                        <h4>Awwwards</h4>
+                        <p>优秀的网站设计展示</p>
+                        <a href="https://www.awwwards.com/" target="_blank">awwwards.com</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subcategory">
+                <h3>图标资源</h3>
+                <div class="bookmark">
+                    <div class="bookmark-icon">I</div>
+                    <div class="bookmark-info">
+                        <h4>Iconfinder</h4>
+                        <p>高质量图标搜索引擎</p>
+                        <a href="https://www.iconfinder.com/" target="_blank">iconfinder.com</a>
+                    </div>
+                </div>
+                
+                <div class="bookmark">
+                    <div class="bookmark-icon">F</div>
+                    <div class="bookmark-info">
+                        <h4>Flaticon</h4>
+                        <p>免费矢量图标库</p>
+                        <a href="https://www.flaticon.com/" target="_blank">flaticon.com</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="development" class="category">
+            <h2>开发工具</h2>
+            
+            <div class="subcategory">
+                <h3>前端开发</h3>
+                <div class="bookmark">
+                    <div class="bookmark-icon">J</div>
+                    <div class="bookmark-info">
+                        <h4>JavaScript工具</h4>
+                        <p>实用的JavaScript工具集合</p>
+                        <a href="https://javascript.com/" target="_blank">javascript.com</a>
+                    </div>
+                </div>
+                
+                <div class="bookmark">
+                    <div class="bookmark-icon">C</div>
+                    <div class="bookmark-info">
+                        <h4>Can I use</h4>
+                        <p>浏览器兼容性查询工具</p>
+                        <a href="https://caniuse.com/" target="_blank">caniuse.com</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subcategory">
+                <h3>代码编辑</h3>
+                <div class="bookmark">
+                    <div class="bookmark-icon">S</div>
+                    <div class="bookmark-info">
+                        <h4>Stack Overflow</h4>
+                        <p>程序员问答社区</p>
+                        <a href="https://stackoverflow.com/" target="_blank">stackoverflow.com</a>
+                    </div>
+                </div>
+                
+                <div class="bookmark">
+                    <div class="bookmark-icon">G</div>
+                    <div class="bookmark-info">
+                        <h4>GitHub</h4>
+                        <p>代码托管平台</p>
+                        <a href="https://github.com/" target="_blank">github.com</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="learning" class="category">
+            <h2>学习资源</h2>
+            
+            <div class="subcategory">
+                <h3>在线课程</h3>
+                <div class="bookmark">
+                    <div class="bookmark-icon">C</div>
+                    <div class="bookmark-info">
+                        <h4>Coursera</h4>
+                        <p>全球顶尖大学课程</p>
+                        <a href="https://www.coursera.org/" target="_blank">coursera.org</a>
+                    </div>
+                </div>
+                
+                <div class="bookmark">
+                    <div class="bookmark-icon">E</div>
+                    <div class="bookmark-info">
+                        <h4>edX</h4>
+                        <p>哈佛、MIT等名校课程</p>
+                        <a href="https://www.edx.org/" target="_blank">edx.org</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subcategory">
+                <h3>技术文档</h3>
+                <div class="bookmark">
+                    <div class="bookmark-icon">M</div>
+                    <div class="bookmark-info">
+                        <h4>MDN Web Docs</h4>
+                        <p>Web技术开发文档</p>
+                        <a href="https://developer.mozilla.org/" target="_blank">developer.mozilla.org</a>
+                    </div>
+                </div>
+                
+                <div class="bookmark">
+                    <div class="bookmark-icon">D</div>
+                    <div class="bookmark-info">
+                        <h4>DevDocs</h4>
+                        <p>多技术文档整合平台</p>
+                        <a href="https://devdocs.io/" target="_blank">devdocs.io</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="entertainment" class="category">
+            <h2>娱乐休闲</h2>
+            
+            <div class="subcategory">
+                <h3>电影音乐</h3>
+                <div class="bookmark">
+                    <div class="bookmark-icon">I</div>
+                    <div class="bookmark-info">
+                        <h4>IMDb</h4>
+                        <p>全球电影数据库</p>
+                        <a href="https://www.imdb.com/" target="_blank">imdb.com</a>
+                    </div>
+                </div>
+                
+                <div class="bookmark">
+                    <div class="bookmark-icon">S</div>
+                    <div class="bookmark-info">
+                        <h4>Spotify</h4>
+                        <p>音乐流媒体服务</p>
+                        <a href="https://www.spotify.com/" target="_blank">spotify.com</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subcategory">
+                <h3>游戏资源</h3>
+                <div class="bookmark">
+                    <div class="bookmark-icon">S</div>
+                    <div class="bookmark-info">
+                        <h4>Steam</h4>
+                        <p>PC游戏平台</p>
+                        <a href="https://store.steampowered.com/" target="_blank">steampowered.com</a>
+                    </div>
+                </div>
+                
+                <div class="bookmark">
+                    <div class="bookmark-icon">I</div>
+                    <div class="bookmark-info">
+                        <h4>itch.io</h4>
+                        <p>独立游戏平台</p>
+                        <a href="https://itch.io/" target="_blank">itch.io</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="utilities" class="category">
+            <h2>实用工具</h2>
+            
+            <div class="subcategory">
+                <h3>生产力工具</h3>
+                <div class="bookmark">
+                    <div class="bookmark-icon">T</div>
+                    <div class="bookmark-info">
+                        <h4>Todoist</h4>
+                        <p>任务管理工具</p>
+                        <a href="https://todoist.com/" target="_blank">todoist.com</a>
+                    </div>
+                </div>
+                
+                <div class="bookmark">
+                    <div class="bookmark-icon">N</div>
+                    <div class="bookmark-info">
+                        <h4>Notion</h4>
+                        <p>笔记和知识管理</p>
+                        <a href="https://www.notion.so/" target="_blank">notion.so</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subcategory">
+                <h3>在线工具</h3>
+                <div class="bookmark">
+                    <div class="bookmark-icon">T</div>
+                    <div class="bookmark-info">
+                        <h4>Tools</h4>
+                        <p>各种实用在线工具集合</p>
+                        <a href="https://www.online-tools.com/" target="_blank">online-tools.com</a>
+                    </div>
+                </div>
+                
+                <div class="bookmark">
+                    <div class="bookmark-icon">C</div>
+                    <div class="bookmark-info">
+                        <h4>ColorTool</h4>
+                        <p>颜色选择器和配色工具</p>
+                        <a href="https://color.adobe.com/zh/create/color-wheel/" target="_blank">color.adobe.com</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>© 2023 Shimmer的小站 - 我的个人收藏夹</p>
+    </footer>
+</body>
+</html>
