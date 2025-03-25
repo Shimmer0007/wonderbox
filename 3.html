@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shimmer的小站 - 我的收藏夹</title>
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+            --accent-color: #fd79a8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --text-color: #495057;
+            --text-light: #f8f9fa;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f5f6fa;
+            scroll-behavior: smooth;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 头部样式 */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-light);
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        /* 导航栏 */
+        nav {
+            background-color: white;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 1.5rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark-color);
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 0.5rem 0;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark-color);
+        }
+
+        /* 主要内容 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .categories {
+            list-style: none;
+        }
+
+        .category-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .category-link {
+            display: block;
+            padding: 0.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .category-link:hover, .category-link.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .subcategories {
+            list-style: none;
+            padding-left: 1rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .category-item.active .subcategories {
+            display: block;
+        }
+
+        .subcategory-item {
+            margin-bottom: 0.3rem;
+        }
+
+        .subcategory-link {
+            display: block;
+            padding: 0.3rem 0.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+            border-radius: 4px;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .subcategory-link:hover, .subcategory-link.active {
+            background-color: rgba(166, 155, 254, 0.2);
+            color: var(--primary-color);
+        }
+
+        /* 收藏夹内容 */
+        .bookmarks-content {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 2rem;
+        }
+
+        .content-section {
+            margin-bottom: 3rem;
+            scroll-margin-top: 100px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--accent-color);
+        }
+
+        .bookmark-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .bookmark-card {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+        }
+
+        .bookmark-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .bookmark-image {
+            height: 150px;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .bookmark-info {
+            padding: 1.5rem;
+        }
+
+        .bookmark-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
+        }
+
+        .bookmark-description {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .bookmark-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .bookmark-link:hover {
+            background-color: #5649c0;
+        }
+
+        /* 页脚 */
+        footer {
+            background-color: var(--dark-color);
+            color: var(--text-light);
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .footer-links li {
+            margin: 0 1rem;
+        }
+
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--secondary-color);
+        }
+
+        .copyright {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                margin-bottom: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: white;
+                flex-direction: column;
+                padding: 1rem 0;
+                box-shadow: var(--shadow);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .nav-links li {
+                margin: 0;
+                padding: 0.5rem 2rem;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .bookmark-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部区域 -->
+    <header>
+        <div class="header-content">
+            <h1 class="logo">Shimmer的小站</h1>
+            <p class="tagline">记录与分享我的数字生活</p>
+        </div>
+    </header>
+
+    <!-- 导航栏 -->
+    <nav>
+        <div class="container nav-container">
+            <button class="mobile-menu-btn">☰</button>
+            <ul class="nav-links">
+                <li><a href="#">首页</a></li>
+                <li><a href="#">博客</a></li>
+                <li><a href="#" class="active">收藏夹</a></li>
+                <li><a href="#">关于我</a></li>
+                <li><a href="#">联系</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <div class="container main-content">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <h3 class="sidebar-title">分类目录</h3>
+            <ul class="categories">
+                <li class="category-item">
+                    <a href="#frontend" class="category-link">技术资源</a>
+                    <ul class="subcategories">
+                        <li class="subcategory-item"><a href="#frontend" class="subcategory-link">前端开发</a></li>
+                        <li class="subcategory-item"><a href="#backend" class="subcategory-link">后端开发</a></li>
+                        <li class="subcategory-item"><a href="#design-tools" class="subcategory-link">设计工具</a></li>
+                        <li class="subcategory-item"><a href="#learning" class="subcategory-link">学习平台</a></li>
+                    </ul>
+                </li>
+                <li class="category-item">
+                    <a href="#ui-design" class="category-link">设计灵感</a>
+                    <ul class="subcategories">
+                        <li class="subcategory-item"><a href="#ui-design" class="subcategory-link">UI设计</a></li>
+                        <li class="subcategory-item"><a href="#illustration" class="subcategory-link">插画艺术</a></li>
+                        <li class="subcategory-item"><a href="#photography" class="subcategory-link">摄影作品</a></li>
+                    </ul>
+                </li>
+                <li class="category-item">
+                    <a href="#productivity" class="category-link">效率工具</a>
+                    <ul class="subcategories">
+                        <li class="subcategory-item"><a href="#notes" class="subcategory-link">笔记应用</a></li>
+                        <li class="subcategory-item"><a href="#time-management" class="subcategory-link">时间管理</a></li>
+                        <li class="subcategory-item"><a href="#collaboration" class="subcategory-link">团队协作</a></li>
+                    </ul>
+                </li>
+                <li class="category-item">
+                    <a href="#entertainment" class="category-link">生活娱乐</a>
+                    <ul class="subcategories">
+                        <li class="subcategory-item"><a href="#movies" class="subcategory-link">影视推荐</a></li>
+                        <li class="subcategory-item"><a href="#music" class="subcategory-link">音乐电台</a></li>
+                        <li class="subcategory-item"><a href="#travel" class="subcategory-link">旅行游记</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 收藏夹内容 -->
+        <main class="bookmarks-content">
+            <!-- 前端开发部分 -->
+            <section id="frontend" class="content-section">
+                <h2 class="section-title">前端开发资源</h2>
+                <div class="bookmark-grid">
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">MDN</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">MDN Web Docs</h3>
+                            <p class="bookmark-description">最全面的前端开发文档，包含HTML、CSS和JavaScript的详细参考和教程。</p>
+                            <a href="https://developer.mozilla.org/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">CSS</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">CSS Tricks</h3>
+                            <p class="bookmark-description">前沿的CSS技巧和教程，包含各种布局解决方案和创意效果实现。</p>
+                            <a href="https://css-tricks.com/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">Vue</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">Vue.js 官方文档</h3>
+                            <p class="bookmark-description">渐进式JavaScript框架Vue.js的官方文档，包含详细的指南和API参考。</p>
+                            <a href="https://vuejs.org/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 后端开发部分 -->
+            <section id="backend" class="content-section">
+                <h2 class="section-title">后端开发资源</h2>
+                <div class="bookmark-grid">
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">Node</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">Node.js 文档</h3>
+                            <p class="bookmark-description">Node.js官方文档，包含API参考和指南，用于构建服务器端应用。</p>
+                            <a href="https://nodejs.org/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">Express</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">Express 框架</h3>
+                            <p class="bookmark-description">快速、无拘束的Node.js Web框架，简化服务器端开发。</p>
+                            <a href="https://expressjs.com/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">MongoDB</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">MongoDB 大学</h3>
+                            <p class="bookmark-description">免费的MongoDB学习资源，包含课程和认证。</p>
+                            <a href="https://university.mongodb.com/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 设计工具部分 -->
+            <section id="design-tools" class="content-section">
+                <h2 class="section-title">设计工具资源</h2>
+                <div class="bookmark-grid">
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">Figma</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">Figma 社区</h3>
+                            <p class="bookmark-description">协作式界面设计工具，拥有丰富的插件和设计系统资源。</p>
+                            <a href="https://www.figma.com/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">Adobe</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">Adobe Creative Cloud</h3>
+                            <p class="bookmark-description">全套创意工具，包含Photoshop、Illustrator等专业软件。</p>
+                            <a href="https://www.adobe.com/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">Sketch</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">Sketch 资源</h3>
+                            <p class="bookmark-description">Mac平台的专业设计工具，拥有丰富的插件和模板资源。</p>
+                            <a href="https://www.sketch.com/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- UI设计部分 -->
+            <section id="ui-design" class="content-section">
+                <h2 class="section-title">UI设计灵感</h2>
+                <div class="bookmark-grid">
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">Dribbble</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">Dribbble</h3>
+                            <p class="bookmark-description">设计师展示作品、寻找灵感的平台，包含大量UI设计案例。</p>
+                            <a href="https://dribbble.com/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">Behance</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">Behance</h3>
+                            <p class="bookmark-description">Adobe旗下的创意作品展示平台，包含完整的项目案例展示。</p>
+                            <a href="https://www.behance.net/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                    <div class="bookmark-card">
+                        <div class="bookmark-image">Awwwards</div>
+                        <div class="bookmark-info">
+                            <h3 class="bookmark-title">Awwwards</h3>
+                            <p class="bookmark-description">评选优秀网站设计的平台，展示前沿的网页设计趋势。</p>
+                            <a href="https://www.awwwards.com/" class="bookmark-link" target="_blank">访问网站</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="footer-content">
+            <p>欢迎来到我的个人空间</p>
+            <ul class="footer-links">
+                <li><a href="#">关于</a></li>
+                <li><a href="#">归档</a></li>
+                <li><a href="#">友情链接</a></li>
+                <li><a href="#">RSS</a></li>
+            </ul>
+            <p class="copyright">© 2023 Shimmer的小站 | 由 ❤️ 驱动</p>
+        </div>
+    </footer>
+
+    <script>
+        // 移动端菜单切换
+        const menuBtn = document.querySelector('.mobile-menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+
+        menuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // 平滑滚动和目录高亮
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取所有目录链接
+            const categoryLinks = document.querySelectorAll('.category-link');
+            const subcategoryLinks = document.querySelectorAll('.subcategory-link');
+            const allLinks = [...categoryLinks, ...subcategoryLinks];
+            
+            // 获取所有内容区块
+            const sections = document.querySelectorAll('.content-section');
+            
+            // 为每个链接添加点击事件
+            allLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetSection = document.querySelector(targetId);
+                    
+                    if (targetSection) {
+                        // 平滑滚动到目标区域
+                        targetSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        
+                        // 更新URL哈希（不触发跳转）
+                        history.pushState(null, null, targetId);
+                        
+                        // 高亮当前选中的链接
+                        updateActiveLink(this);
+                    }
+                });
+            });
+            
+            // 滚动时自动高亮当前可见的目录项
+            window.addEventListener('scroll', function() {
+                let currentSection = '';
+                
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop - 100;
+                    const sectionHeight = section.offsetHeight;
+                    
+                    if (pageYOffset >= sectionTop && pageYOffset < sectionTop + sectionHeight) {
+                        currentSection = '#' + section.getAttribute('id');
+                    }
+                });
+                
+                // 找到对应的链接并高亮
+                if (currentSection) {
+                    const correspondingLink = document.querySelector(`.subcategory-link[href="${currentSection}"]`) || 
+                                            document.querySelector(`.category-link[href="${currentSection}"]`);
+                    if (correspondingLink) {
+                        updateActiveLink(correspondingLink);
+                    }
+                }
+            });
+            
+            // 更新活动链接状态
+            function updateActiveLink(activeLink) {
+                // 移除所有active类
+                allLinks.forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                // 添加当前active类
+                activeLink.classList.add('active');
+                
+                // 如果是子分类链接，展开父分类
+                if (activeLink.classList.contains('subcategory-link')) {
+                    const parentCategory = activeLink.closest('.category-item');
+                    const parentCategoryLink = parentCategory.querySelector('.category-link');
+                    parentCategoryLink.classList.add('active');
+                    parentCategory.classList.add('active');
+                }
+            }
+            
+            // 初始加载时检查哈希并滚动到对应位置
+            if (window.location.hash) {
+                const targetSection = document.querySelector(window.location.hash);
+                if (targetSection) {
+                    setTimeout(() => {
+                        targetSection.scrollIntoView();
+                        const correspondingLink = document.querySelector(`.subcategory-link[href="${window.location.hash}"]`) || 
+                                                document.querySelector(`.category-link[href="${window.location.hash}"]`);
+                        if (correspondingLink) {
+                            updateActiveLink(correspondingLink);
+                        }
+                    }, 100);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
