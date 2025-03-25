@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shimmer的小站 - 我的收藏夹</title>
+    <title>Shimmer的收藏夹</title>
     <style>
         :root {
-            --primary-color: #6c5ce7;
-            --secondary-color: #a29bfe;
+            --primary-color: #2040acce;
+            --secondary-color: #1eccbdde;
             --accent-color: #fd79a8;
-            --light-color: #f8f9fa;
+            --light-color: #faf8f8;
             --dark-color: #343a40;
             --text-color: #495057;
             --text-light: #f8f9fa;
@@ -27,7 +27,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: var(--text-color);
-            background-color: #f5f6fa;
+            background-color: #fafaf5;
             scroll-behavior: smooth;
         }
 
@@ -206,7 +206,7 @@
             color: var(--primary-color);
         }
 
-        /* 收藏夹内容 */
+        /* 收藏夹内容 - 简化版 */
         .bookmarks-content {
             background-color: white;
             border-radius: 8px;
@@ -237,64 +237,39 @@
             background-color: var(--accent-color);
         }
 
-        .bookmark-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
+        .bookmark-list {
+            list-style: none;
         }
 
-        .bookmark-card {
-            background-color: var(--light-color);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            transition: var(--transition);
-        }
-
-        .bookmark-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .bookmark-image {
-            height: 150px;
-            background-color: var(--secondary-color);
+        .bookmark-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2rem;
+            flex-direction: column;
         }
 
-        .bookmark-info {
-            padding: 1.5rem;
+        .bookmark-item:last-child {
+            border-bottom: none;
         }
 
         .bookmark-title {
             font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-            color: var(--dark-color);
+            font-weight: 500;
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: var(--transition);
+            margin-bottom: 0.3rem;
+        }
+
+        .bookmark-title:hover {
+            color: #5649c0;
+            text-decoration: underline;
         }
 
         .bookmark-description {
             font-size: 0.9rem;
-            margin-bottom: 1rem;
             color: var(--text-color);
-        }
-
-        .bookmark-link {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background-color: var(--primary-color);
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
-
-        .bookmark-link:hover {
-            background-color: #5649c0;
+            opacity: 0.8;
         }
 
         /* 页脚 */
@@ -373,10 +348,6 @@
             .mobile-menu-btn {
                 display: block;
             }
-
-            .bookmark-grid {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
@@ -384,8 +355,8 @@
     <!-- 头部区域 -->
     <header>
         <div class="header-content">
-            <h1 class="logo">Shimmer的小站</h1>
-            <p class="tagline">记录与分享我的数字生活</p>
+            <h1 class="logo">Shimmer的收藏页</h1>
+            <p class="tagline">有空没空都可以来摸鱼~</p>
         </div>
     </header>
 
@@ -394,11 +365,9 @@
         <div class="container nav-container">
             <button class="mobile-menu-btn">☰</button>
             <ul class="nav-links">
-                <li><a href="#">首页</a></li>
-                <li><a href="#">博客</a></li>
-                <li><a href="#" class="active">收藏夹</a></li>
-                <li><a href="#">关于我</a></li>
-                <li><a href="#">联系</a></li>
+                <li><a href="shimmer0007.github.io">首页</a></li>
+                <li><a href="shimmer0007.github.io/blog/blognav">博客</a></li>
+                <li><a href="#">关于</a></li>
             </ul>
         </div>
     </nav>
@@ -407,13 +376,13 @@
     <div class="container main-content">
         <!-- 侧边栏 -->
         <aside class="sidebar">
-            <h3 class="sidebar-title">分类目录</h3>
+            <h3 class="sidebar-title">我是目录</h3>
             <ul class="categories">
                 <li class="category-item">
                     <a href="#frontend" class="category-link">技术资源</a>
                     <ul class="subcategories">
-                        <li class="subcategory-item"><a href="#frontend" class="subcategory-link">前端开发</a></li>
-                        <li class="subcategory-item"><a href="#backend" class="subcategory-link">后端开发</a></li>
+                        <li class="subcategory-item"><a href="#frontend" class="subcategory-link">数据资料查阅</a></li>
+                        <li class="subcategory-item"><a href="#backend" class="subcategory-link">计算机技术</a></li>
                         <li class="subcategory-item"><a href="#design-tools" class="subcategory-link">设计工具</a></li>
                         <li class="subcategory-item"><a href="#learning" class="subcategory-link">学习平台</a></li>
                     </ul>
@@ -421,25 +390,26 @@
                 <li class="category-item">
                     <a href="#ui-design" class="category-link">设计灵感</a>
                     <ul class="subcategories">
-                        <li class="subcategory-item"><a href="#ui-design" class="subcategory-link">UI设计</a></li>
-                        <li class="subcategory-item"><a href="#illustration" class="subcategory-link">插画艺术</a></li>
-                        <li class="subcategory-item"><a href="#photography" class="subcategory-link">摄影作品</a></li>
+                        <li class="subcategory-item"><a href="#ui-design" class="subcategory-link">平面设计</a></li>
+                        <li class="subcategory-item"><a href="#illustration" class="subcategory-link">汇报展示</a></li>
+                        <li class="subcategory-item"><a href="#photography" class="subcategory-link">科学可视化</a></li>
                     </ul>
                 </li>
                 <li class="category-item">
                     <a href="#productivity" class="category-link">效率工具</a>
                     <ul class="subcategories">
-                        <li class="subcategory-item"><a href="#notes" class="subcategory-link">笔记应用</a></li>
-                        <li class="subcategory-item"><a href="#time-management" class="subcategory-link">时间管理</a></li>
-                        <li class="subcategory-item"><a href="#collaboration" class="subcategory-link">团队协作</a></li>
+                        <li class="subcategory-item"><a href="#collaboration" class="subcategory-link">AI生产力</a></li>
+                        <li class="subcategory-item"><a href="#notes" class="subcategory-link">共享文档</a></li>
+                        <li class="subcategory-item"><a href="#time-management" class="subcategory-link">文件转换</a></li>
+                        <li class="subcategory-item"><a href="#collaboration" class="subcategory-link">其他</a></li>
                     </ul>
                 </li>
                 <li class="category-item">
                     <a href="#entertainment" class="category-link">生活娱乐</a>
                     <ul class="subcategories">
-                        <li class="subcategory-item"><a href="#movies" class="subcategory-link">影视推荐</a></li>
+                        <li class="subcategory-item"><a href="#movies" class="subcategory-link">摸鱼专用</a></li>
                         <li class="subcategory-item"><a href="#music" class="subcategory-link">音乐电台</a></li>
-                        <li class="subcategory-item"><a href="#travel" class="subcategory-link">旅行游记</a></li>
+                        <li class="subcategory-item"><a href="#travel" class="subcategory-link">看看世界</a></li>
                     </ul>
                 </li>
             </ul>
@@ -450,125 +420,81 @@
             <!-- 前端开发部分 -->
             <section id="frontend" class="content-section">
                 <h2 class="section-title">前端开发资源</h2>
-                <div class="bookmark-grid">
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">MDN</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">MDN Web Docs</h3>
-                            <p class="bookmark-description">最全面的前端开发文档，包含HTML、CSS和JavaScript的详细参考和教程。</p>
-                            <a href="https://developer.mozilla.org/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">CSS</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">CSS Tricks</h3>
-                            <p class="bookmark-description">前沿的CSS技巧和教程，包含各种布局解决方案和创意效果实现。</p>
-                            <a href="https://css-tricks.com/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">Vue</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">Vue.js 官方文档</h3>
-                            <p class="bookmark-description">渐进式JavaScript框架Vue.js的官方文档，包含详细的指南和API参考。</p>
-                            <a href="https://vuejs.org/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                </div>
+                <ul class="bookmark-list">
+                    <li class="bookmark-item">
+                        <a href="https://developer.mozilla.org/" class="bookmark-title" target="_blank">MDN Web Docs</a>
+                        <p class="bookmark-description">最全面的前端开发文档，包含HTML、CSS和JavaScript的详细参考和教程</p>
+                    </li>
+                    <li class="bookmark-item">
+                        <a href="https://css-tricks.com/" class="bookmark-title" target="_blank">CSS Tricks</a>
+                        <p class="bookmark-description">前沿的CSS技巧和教程，包含各种布局解决方案和创意效果实现</p>
+                    </li>
+                    <li class="bookmark-item">
+                        <a href="https://vuejs.org/" class="bookmark-title" target="_blank">Vue.js 官方文档</a>
+                        <p class="bookmark-description">渐进式JavaScript框架Vue.js的官方文档，包含详细的指南和API参考</p>
+                    </li>
+                    <li class="bookmark-item">
+                        <a href="https://reactjs.org/" class="bookmark-title" target="_blank">React 官方文档</a>
+                        <p class="bookmark-description">Facebook开发的JavaScript库React的官方文档，用于构建用户界面</p>
+                    </li>
+                </ul>
             </section>
 
             <!-- 后端开发部分 -->
             <section id="backend" class="content-section">
                 <h2 class="section-title">后端开发资源</h2>
-                <div class="bookmark-grid">
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">Node</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">Node.js 文档</h3>
-                            <p class="bookmark-description">Node.js官方文档，包含API参考和指南，用于构建服务器端应用。</p>
-                            <a href="https://nodejs.org/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">Express</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">Express 框架</h3>
-                            <p class="bookmark-description">快速、无拘束的Node.js Web框架，简化服务器端开发。</p>
-                            <a href="https://expressjs.com/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">MongoDB</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">MongoDB 大学</h3>
-                            <p class="bookmark-description">免费的MongoDB学习资源，包含课程和认证。</p>
-                            <a href="https://university.mongodb.com/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                </div>
+                <ul class="bookmark-list">
+                    <li class="bookmark-item">
+                        <a href="https://nodejs.org/" class="bookmark-title" target="_blank">Node.js 文档</a>
+                        <p class="bookmark-description">Node.js官方文档，包含API参考和指南，用于构建服务器端应用</p>
+                    </li>
+                    <li class="bookmark-item">
+                        <a href="https://expressjs.com/" class="bookmark-title" target="_blank">Express 框架</a>
+                        <p class="bookmark-description">快速、无拘束的Node.js Web框架，简化服务器端开发</p>
+                    </li>
+                    <li class="bookmark-item">
+                        <a href="https://university.mongodb.com/" class="bookmark-title" target="_blank">MongoDB 大学</a>
+                        <p class="bookmark-description">免费的MongoDB学习资源，包含课程和认证</p>
+                    </li>
+                </ul>
             </section>
 
             <!-- 设计工具部分 -->
             <section id="design-tools" class="content-section">
                 <h2 class="section-title">设计工具资源</h2>
-                <div class="bookmark-grid">
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">Figma</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">Figma 社区</h3>
-                            <p class="bookmark-description">协作式界面设计工具，拥有丰富的插件和设计系统资源。</p>
-                            <a href="https://www.figma.com/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">Adobe</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">Adobe Creative Cloud</h3>
-                            <p class="bookmark-description">全套创意工具，包含Photoshop、Illustrator等专业软件。</p>
-                            <a href="https://www.adobe.com/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">Sketch</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">Sketch 资源</h3>
-                            <p class="bookmark-description">Mac平台的专业设计工具，拥有丰富的插件和模板资源。</p>
-                            <a href="https://www.sketch.com/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                </div>
+                <ul class="bookmark-list">
+                    <li class="bookmark-item">
+                        <a href="https://www.figma.com/" class="bookmark-title" target="_blank">Figma 社区</a>
+                        <p class="bookmark-description">协作式界面设计工具，拥有丰富的插件和设计系统资源</p>
+                    </li>
+                    <li class="bookmark-item">
+                        <a href="https://www.adobe.com/" class="bookmark-title" target="_blank">Adobe Creative Cloud</a>
+                        <p class="bookmark-description">全套创意工具，包含Photoshop、Illustrator等专业软件</p>
+                    </li>
+                    <li class="bookmark-item">
+                        <a href="https://www.sketch.com/" class="bookmark-title" target="_blank">Sketch 资源</a>
+                        <p class="bookmark-description">Mac平台的专业设计工具，拥有丰富的插件和模板资源</p>
+                    </li>
+                </ul>
             </section>
 
             <!-- UI设计部分 -->
             <section id="ui-design" class="content-section">
                 <h2 class="section-title">UI设计灵感</h2>
-                <div class="bookmark-grid">
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">Dribbble</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">Dribbble</h3>
-                            <p class="bookmark-description">设计师展示作品、寻找灵感的平台，包含大量UI设计案例。</p>
-                            <a href="https://dribbble.com/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">Behance</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">Behance</h3>
-                            <p class="bookmark-description">Adobe旗下的创意作品展示平台，包含完整的项目案例展示。</p>
-                            <a href="https://www.behance.net/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                    <div class="bookmark-card">
-                        <div class="bookmark-image">Awwwards</div>
-                        <div class="bookmark-info">
-                            <h3 class="bookmark-title">Awwwards</h3>
-                            <p class="bookmark-description">评选优秀网站设计的平台，展示前沿的网页设计趋势。</p>
-                            <a href="https://www.awwwards.com/" class="bookmark-link" target="_blank">访问网站</a>
-                        </div>
-                    </div>
-                </div>
+                <ul class="bookmark-list">
+                    <li class="bookmark-item">
+                        <a href="https://dribbble.com/" class="bookmark-title" target="_blank">Dribbble</a>
+                        <p class="bookmark-description">设计师展示作品、寻找灵感的平台，包含大量UI设计案例</p>
+                    </li>
+                    <li class="bookmark-item">
+                        <a href="https://www.behance.net/" class="bookmark-title" target="_blank">Behance</a>
+                        <p class="bookmark-description">Adobe旗下的创意作品展示平台，包含完整的项目案例展示</p>
+                    </li>
+                    <li class="bookmark-item">
+                        <a href="https://www.awwwards.com/" class="bookmark-title" target="_blank">Awwwards</a>
+                        <p class="bookmark-description">评选优秀网站设计的平台，展示前沿的网页设计趋势</p>
+                    </li>
+                </ul>
             </section>
         </main>
     </div>
@@ -591,23 +517,33 @@
         // 移动端菜单切换
         const menuBtn = document.querySelector('.mobile-menu-btn');
         const navLinks = document.querySelector('.nav-links');
-
+    
         menuBtn.addEventListener('click', () => {
             navLinks.classList.toggle('active');
         });
-
+    
         // 平滑滚动和目录高亮
         document.addEventListener('DOMContentLoaded', function() {
             // 获取所有目录链接
             const categoryLinks = document.querySelectorAll('.category-link');
             const subcategoryLinks = document.querySelectorAll('.subcategory-link');
-            const allLinks = [...categoryLinks, ...subcategoryLinks];
             
-            // 获取所有内容区块
-            const sections = document.querySelectorAll('.content-section');
-            
-            // 为每个链接添加点击事件
-            allLinks.forEach(link => {
+            // 为每个主分类添加点击事件
+            categoryLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const parentCategory = this.closest('.category-item');
+                    parentCategory.classList.toggle('active');
+                    
+                    // 阻止一级标题的跳转行为
+                    if (this.classList.contains('category-link')) {
+                        return;
+                    }
+                });
+            });
+    
+            // 为每个子分类添加点击事件
+            subcategoryLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const targetId = this.getAttribute('href');
@@ -625,13 +561,14 @@
                         
                         // 高亮当前选中的链接
                         updateActiveLink(this);
-                    }
+                    });
                 });
             });
-            
+    
             // 滚动时自动高亮当前可见的目录项
             window.addEventListener('scroll', function() {
                 let currentSection = '';
+                const sections = document.querySelectorAll('.content-section');
                 
                 sections.forEach(section => {
                     const sectionTop = section.offsetTop - 100;
@@ -655,20 +592,18 @@
             // 更新活动链接状态
             function updateActiveLink(activeLink) {
                 // 移除所有active类
-                allLinks.forEach(link => {
+                subcategoryLinks.forEach(link => {
                     link.classList.remove('active');
                 });
                 
                 // 添加当前active类
                 activeLink.classList.add('active');
                 
-                // 如果是子分类链接，展开父分类
-                if (activeLink.classList.contains('subcategory-link')) {
-                    const parentCategory = activeLink.closest('.category-item');
-                    const parentCategoryLink = parentCategory.querySelector('.category-link');
-                    parentCategoryLink.classList.add('active');
-                    parentCategory.classList.add('active');
-                }
+                // 展开父分类
+                const parentCategory = activeLink.closest('.category-item');
+                const parentCategoryLink = parentCategory.querySelector('.category-link');
+                parentCategoryLink.classList.add('active');
+                parentCategory.classList.add('active');
             }
             
             // 初始加载时检查哈希并滚动到对应位置
