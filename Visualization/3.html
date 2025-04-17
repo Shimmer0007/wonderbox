@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习行为数据可视化分析</title>
+    <!-- 引入 ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <!-- 引入 PapaParse 用于解析 CSV -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+        .chart-container { border: 1px solid #ccc; padding: 15px; min-height: 350px; }
+        .upload-section { margin-bottom: 20px; padding: 15px; border: 1px dashed #aaa; }
+        .upload-section h3 { margin-top: 0; }
+        label { margin-right: 10px; }
+        input[type="file"] { margin-bottom: 10px; display: block; }
+        h2, h3 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>学习行为数据可视化分析平台</h1>
+
+    <!-- 数据上传区域 -->
+    <div class="upload-section">
+        <h2>数据上传</h2>
+        <p>请分别上传所需的数据文件。图表将在文件成功加载后自动生成或更新。</p>
+
+        <div>
+            <label for="studentInfoFile">学习者基本信息 (Data_StudentInfo.csv):</label>
+            <input type="file" id="studentInfoFile" accept=".csv">
+        </div>
+        <div>
+            <label for="titleInfoFile">题目基本信息 (Data_TitleInfo.csv):</label>
+            <input type="file" id="titleInfoFile" accept=".csv">
+        </div>
+        <div>
+            <!-- 注意：这里允许上传多个提交记录文件 -->
+            <label for="submitRecordFiles">学习者答题记录 (SubmitRecord-Class*.csv):</label>
+            <input type="file" id="submitRecordFiles" accept=".csv" multiple>
+        </div>
+         <div>
+            <label for="timeSeriesFile">时间序列分析数据 (time_series_analysis.csv):</label>
+            <input type="file" id="timeSeriesFile" accept=".csv">
+        </div>
+        <div>
+            <label for="dailyCountFile">每日答题频次 (daily_answer_count.csv):</label>
+            <input type="file" id="dailyCountFile" accept=".csv">
+        </div>
+         <div>
+            <label for="hourlyCountFile">每小时答题频次 (hourly_answer_count.csv):</label>
+            <input type="file" id="hourlyCountFile" accept=".csv">
+        </div>
+         <div>
+            <label for="monthlyCountFile">每月答题频次 (monthly_answer_count.csv):</label>
+            <input type="file" id="monthlyCountFile" accept=".csv">
+        </div>
+        <div>
+            <!-- 允许上传多个图结构文件 -->
+            <label for="graphFiles">知识点图结构 (vis_graph_k*.txt, vis_graph_kk*.txt):</label>
+            <input type="file" id="graphFiles" accept=".txt" multiple>
+        </div>
+        <button id="loadDataBtn">加载并分析数据</button>
+    </div>
+
+    <!-- 可视化图表容器 -->
+    <div class="container">
+        <div id="knowledgeMasteryChart" class="chart-container"><h3>知识点掌握程度</h3></div>
+        <div id="hourlyActivityChart" class="chart-container"><h3>学习者活跃时段 (小时)</h3></div>
+        <div id="dailyActivityChart" class="chart-container"><h3>学习者活跃时段 (天)</h3></div>
+        <div id="monthlyActivityChart" class="chart-container"><h3>学习者活跃时段 (月)</h3></div>
+        <div id="knowledgeGraphChart" class="chart-container"><h3>知识点关系图 (示例)</h3></div>
+        <div id="difficultyAnalysisChart" class="chart-container"><h3>题目难度分析</h3></div>
+        <!-- 可以根据需要添加更多图表容器 -->
+    </div>
+
+    <script>
+        // 全局变量存储解析后的数据
+        let studentData = [];
+        let titleData = [];
+        let submitRecords = [];
+        let timeSeriesData = [];
+        let dailyCountData = [];
+        let hourlyCountData = [];
+        let monthlyCountData = [];
+        let graphData = {}; // 用于存储不同知识点的图数据 { 'kk0': {nodes:[], links:[]}, 'k0': ... }
+
+        // ECharts 实例
+        let knowledgeMasteryChart = null;
+        let hourlyActivityChart = null;
+        let dailyActivityChart = null;
+        let monthlyActivityChart = null;
+        let knowledgeGraphChart = null;
+        let difficultyAnalysisChart = null;
+
+        // --- 文件读取与解析 ---
+        // 封装文件读取逻辑
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                // 文件读取成功完成时触发
+                reader.onload = (event) => {
+                    console.log(`文件 ${file.name} 读取成功`);
+                    resolve({ name: file.name, content: event.target.result });
+                };
+                // 文件读取失败时触发
+                reader.onerror = (error) => {
+                    console.error(`文件 ${file.name} 读取失败:`, error);
+                    reject(error);
+                };
+                // 以文本格式读取文件内容
+                reader.readAsText(file, 'UTF-8');
+            });
+        }
+
+        // 解析 CSV 文件内容
+        function parseCsv(content, fileType) {
+            // 使用 PapaParse 解析 CSV
+            // header: true 表示第一行是表头，会自动将数据解析为对象数组
+            // skipEmptyLines: true 跳过空行
+            // dynamicTyping: true 尝试自动转换数据类型 (数字、布尔值)
+            const result = Papa.parse(content, {
+                header: true,
+                skipEmptyLines: true,
+                dynamicTyping: true,
+                complete: (results) => {
+                    console.log(`${fileType} CSV 解析完成，共 ${results.data.length} 条记录`);
+                },
+                error: (error) => {
+                    console.error(`${fileType} CSV 解析错误:`, error);
+                }
+            });
+            // 返回解析后的数据数组 (如果解析出错或没有数据，则返回空数组)
+            return result.data || [];
+        }
+
+        // 解析 TXT 图结构文件内容
+        function parseGraphTxt(content, fileName) {
+            // 按行分割文件内容
+            const lines = content.trim().split('\n');
+            const links = []; // 存储边的数组
+            const nodesSet = new Set(); // 使用 Set 存储节点，自动去重
+
+            // 遍历每一行
+            lines.forEach(line => {
+                // 去除行首尾空格，并按空格或制表符分割
+                const parts = line.trim().split(/\s+/);
+                // 确保一行恰好包含两个节点 ID
+                if (parts.length === 2) {
+                    const source = parts[0];
+                    const target = parts[1];
+                    // 添加边到 links 数组
+                    links.push({ source, target });
+                    // 添加节点到 nodesSet
+                    nodesSet.add(source);
+                    nodesSet.add(target);
+                } else {
+                    console.warn(`文件 ${fileName} 中发现格式不正确的行: "${line}"`);
+                }
+            });
+
+            // 将 Set 转换为 ECharts 需要的节点数组格式
+            const nodes = Array.from(nodesSet).map(id => ({ id: id, name: id })); // 简单地用 id 作为 name
+
+            console.log(`图文件 ${fileName} 解析完成，节点数: ${nodes.length}, 边数: ${links.length}`);
+            // 返回包含节点和边的对象
+            return { nodes, links };
+        }
+
+
+        // --- 事件监听 ---
+        // 获取所有文件输入元素
+        const studentInfoFileInput = document.getElementById('studentInfoFile');
+        const titleInfoFileInput = document.getElementById('titleInfoFile');
+        const submitRecordFilesInput = document.getElementById('submitRecordFiles');
+        const timeSeriesFileInput = document.getElementById('timeSeriesFile');
+        const dailyCountFileInput = document.getElementById('dailyCountFile');
+        const hourlyCountFileInput = document.getElementById('hourlyCountFile');
+        const monthlyCountFileInput = document.getElementById('monthlyCountFile');
+        const graphFilesInput = document.getElementById('graphFiles');
+        const loadDataBtn = document.getElementById('loadDataBtn');
+
+        // 为 "加载并分析数据" 按钮添加点击事件监听器
+        loadDataBtn.addEventListener('click', async () => {
+            console.log("开始加载和分析数据...");
+            try {
+                // --- 1. 读取并解析学习者信息 ---
+                if (studentInfoFileInput.files.length > 0) {
+                    const file = studentInfoFileInput.files[0];
+                    // 调用 readFile 读取文件内容
+                    const fileContent = await readFile(file);
+                    // 调用 parseCsv 解析 CSV 内容
+                    studentData = parseCsv(fileContent.content, '学习者信息');
+                    console.log("学习者信息数据:", studentData.slice(0, 5)); // 打印前5条看看
+                } else {
+                    console.warn("未选择学习者信息文件");
+                }
+
+                // --- 2. 读取并解析题目信息 ---
+                if (titleInfoFileInput.files.length > 0) {
+                    const file = titleInfoFileInput.files[0];
+                    const fileContent = await readFile(file);
+                    titleData = parseCsv(fileContent.content, '题目信息');
+                     // 处理知识点字段，可能包含多个知识点，用特定分隔符（假设是逗号）
+                    titleData.forEach(item => {
+                        if (item.knowledge && typeof item.knowledge === 'string') {
+                            item.knowledgeList = item.knowledge.split(',').map(k => k.trim());
+                        } else {
+                            item.knowledgeList = [];
+                        }
+                        if (item.sub_knowledge && typeof item.sub_knowledge === 'string') {
+                            item.subKnowledgeList = item.sub_knowledge.split(',').map(k => k.trim());
+                        } else {
+                            item.subKnowledgeList = [];
+                        }
+                    });
+                    console.log("题目信息数据:", titleData.slice(0, 5));
+                } else {
+                    console.warn("未选择题目信息文件");
+                }
+
+                // --- 3. 读取并解析答题记录 (可能多个文件) ---
+                submitRecords = []; // 清空旧数据
+                if (submitRecordFilesInput.files.length > 0) {
+                    // Promise.all 用于并行读取和解析所有选中的文件
+                    const recordPromises = Array.from(submitRecordFilesInput.files).map(async (file) => {
+                        const fileContent = await readFile(file);
+                        return parseCsv(fileContent.content, `答题记录 (${file.name})`);
+                    });
+                    // 等待所有文件处理完成
+                    const results = await Promise.all(recordPromises);
+                    // 将所有文件的记录合并到一个数组中
+                    submitRecords = results.flat(); // flat() 将嵌套数组展开
+                    console.log(`总答题记录数: ${submitRecords.length}`);
+                    console.log("合并后的答题记录示例:", submitRecords.slice(0, 5));
+                } else {
+                    console.warn("未选择答题记录文件");
+                }
+
+                 // --- 4. 读取并解析时间序列数据 ---
+                if (timeSeriesFileInput.files.length > 0) {
+                    const file = timeSeriesFileInput.files[0];
+                    const fileContent = await readFile(file);
+                    timeSeriesData = parseCsv(fileContent.content, '时间序列分析');
+                    console.log("时间序列数据:", timeSeriesData.slice(0, 5));
+                } else {
+                    console.warn("未选择时间序列分析文件");
+                }
+
+                // --- 5. 读取并解析每日答题频次 ---
+                if (dailyCountFileInput.files.length > 0) {
+                    const file = dailyCountFileInput.files[0];
+                    const fileContent = await readFile(file);
+                    dailyCountData = parseCsv(fileContent.content, '每日答题频次');
+                    console.log("每日答题频次数据:", dailyCountData.slice(0, 5));
+                } else {
+                    console.warn("未选择每日答题频次文件");
+                }
+
+                // --- 6. 读取并解析每小时答题频次 ---
+                if (hourlyCountFileInput.files.length > 0) {
+                    const file = hourlyCountFileInput.files[0];
+                    const fileContent = await readFile(file);
+                    // 注意：这里的数据格式可能需要特殊处理，假设第一列是 hour，第二列是 count
+                    const rawHourlyData = parseCsv(fileContent.content, '每小时答题频次');
+                    // 转换成更标准的 {hour: x, count: y} 格式
+                    hourlyCountData = rawHourlyData.map(item => ({
+                        hour: item.hour, // PapaParse 应该能正确识别 'hour' 列
+                        count: item['0'] || item.count // 处理可能的列名 '0' 或 'count'
+                    })).filter(item => item.hour !== undefined && item.count !== undefined); // 过滤无效数据
+                    console.log("每小时答题频次数据:", hourlyCountData.slice(0, 5));
+                } else {
+                    console.warn("未选择每小时答题频次文件");
+                }
+
+                // --- 7. 读取并解析每月答题频次 ---
+                if (monthlyCountFileInput.files.length > 0) {
+                    const file = monthlyCountFileInput.files[0];
+                    const fileContent = await readFile(file);
+                     // 同样，处理可能的列名 '0' 或 'count'
+                    const rawMonthlyData = parseCsv(fileContent.content, '每月答题频次');
+                    monthlyCountData = rawMonthlyData.map(item => ({
+                        month: item.month,
+                        count: item['0'] || item.count
+                    })).filter(item => item.month !== undefined && item.count !== undefined);
+                    console.log("每月答题频次数据:", monthlyCountData.slice(0, 5));
+                } else {
+                    console.warn("未选择每月答题频次文件");
+                }
+
+
+                // --- 8. 读取并解析图结构文件 (可能多个) ---
+                graphData = {}; // 清空旧数据
+                if (graphFilesInput.files.length > 0) {
+                    const graphPromises = Array.from(graphFilesInput.files).map(async (file) => {
+                        const fileContent = await readFile(file);
+                        // 从文件名中提取知识点标识 (例如 'vis_graph_kk0.txt' -> 'kk0')
+                        const match = file.name.match(/vis_graph_([a-zA-Z0-9]+)\.txt/);
+                        const graphKey = match ? match[1] : file.name; // 如果匹配失败，用文件名作为 key
+                        // 解析 TXT 文件内容
+                        graphData[graphKey] = parseGraphTxt(fileContent.content, file.name);
+                    });
+                    await Promise.all(graphPromises);
+                    console.log("图结构数据:", graphData);
+                } else {
+                    console.warn("未选择图结构文件");
+                }
+
+
+                // --- 数据加载解析完成，开始数据处理和可视化 ---
+                console.log("所有选定文件加载解析完成，开始生成图表...");
+                initializeCharts(); // 初始化 ECharts 实例
+                renderCharts();     // 渲染图表
+
+            } catch (error) {
+                console.error("处理文件时发生错误:", error);
+                alert("加载或处理文件时出错，请检查控制台获取详细信息。");
+            }
+        });
+
+        // --- ECharts 初始化 ---
+        function initializeCharts() {
+            // 如果实例已存在，先销毁
+            knowledgeMasteryChart?.dispose();
+            hourlyActivityChart?.dispose();
+            dailyActivityChart?.dispose();
+            monthlyActivityChart?.dispose();
+            knowledgeGraphChart?.dispose();
+            difficultyAnalysisChart?.dispose();
+
+            // 初始化新的 ECharts 实例
+            knowledgeMasteryChart = echarts.init(document.getElementById('knowledgeMasteryChart'));
+            hourlyActivityChart = echarts.init(document.getElementById('hourlyActivityChart'));
+            dailyActivityChart = echarts.init(document.getElementById('dailyActivityChart'));
+            monthlyActivityChart = echarts.init(document.getElementById('monthlyActivityChart'));
+            knowledgeGraphChart = echarts.init(document.getElementById('knowledgeGraphChart'));
+            difficultyAnalysisChart = echarts.init(document.getElementById('difficultyAnalysisChart'));
+            console.log("ECharts 实例初始化完成。");
+
+             // 添加窗口大小调整监听器，使图表自适应
+            window.addEventListener('resize', () => {
+                knowledgeMasteryChart?.resize();
+                hourlyActivityChart?.resize();
+                dailyActivityChart?.resize();
+                monthlyActivityChart?.resize();
+                knowledgeGraphChart?.resize();
+                difficultyAnalysisChart?.resize();
+            });
+        }
+
+        // --- 图表渲染 ---
+        function renderCharts() {
+            if (!studentData.length || !titleData.length || !submitRecords.length) {
+                console.warn("核心数据不完整，部分图表可能无法渲染。");
+                // 可以选择显示提示信息或禁用某些图表
+            }
+
+            renderKnowledgeMastery();
+            renderActivityCharts();
+            renderKnowledgeGraph(); // 渲染第一个可用的图数据作为示例
+            renderDifficultyAnalysis();
+            // 调用其他图表的渲染函数...
+            console.log("图表渲染调用完成。");
+        }
+
+        // --- 具体图表渲染函数 ---
+
+        // 2a & 2c: 知识点掌握程度 (示例：按知识点计算平均分)
+        function renderKnowledgeMastery() {
+            if (!knowledgeMasteryChart || !submitRecords.length || !titleData.length) return;
+
+            // 1. 建立 title_ID 到知识点的映射
+            const titleToKnowledgeMap = new Map();
+            titleData.forEach(t => {
+                if (t.title_ID && t.knowledgeList) {
+                    // 假设我们主要关心第一个知识点
+                    if (t.knowledgeList.length > 0) {
+                         titleToKnowledgeMap.set(t.title_ID, t.knowledgeList[0]); // 或者 t.knowledgeList 用于处理多个知识点
+                    }
+                }
+            });
+
+            // 2. 计算每个知识点的总分和答题次数
+            const knowledgeStats = {}; // { knowledge: { totalScore: 0, count: 0 } }
+            submitRecords.forEach(record => {
+                const knowledge = titleToKnowledgeMap.get(record.title_ID);
+                if (knowledge && typeof record.score === 'number') {
+                    if (!knowledgeStats[knowledge]) {
+                        knowledgeStats[knowledge] = { totalScore: 0, count: 0 };
+                    }
+                    knowledgeStats[knowledge].totalScore += record.score;
+                    knowledgeStats[knowledge].count++;
+                }
+            });
+
+            // 3. 计算平均分
+            const knowledgeNames = Object.keys(knowledgeStats);
+            const averageScores = knowledgeNames.map(k => {
+                const stats = knowledgeStats[k];
+                return stats.count > 0 ? (stats.totalScore / stats.count).toFixed(2) : 0;
+            });
+
+            // 4. 配置 ECharts Option (条形图)
+            const option = {
+                title: {
+                    text: '各知识点平均得分',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: knowledgeNames,
+                    axisLabel: { interval: 0, rotate: 30 } // 防止标签重叠
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '平均分'
+                },
+                grid: { // 调整网格边距，给 x 轴标签留空间
+                    bottom: '15%'
+                },
+                series: [{
+                    name: '平均得分',
+                    type: 'bar',
+                    data: averageScores,
+                    itemStyle: {
+                        color: (params) => {
+                            // 可以根据分数高低设置不同颜色，突出薄弱环节
+                            return params.value < 60 ? '#FF6347' : '#4682B4'; // 低于60分用红色表示
+                        }
+                    }
+                }]
+            };
+            knowledgeMasteryChart.setOption(option);
+        }
+
+        // 2b: 学习者活跃时段
+        function renderActivityCharts() {
+            // 小时活跃度
+            if (hourlyActivityChart && hourlyCountData.length > 0) {
+                // 对数据按小时排序
+                hourlyCountData.sort((a, b) => a.hour - b.hour);
+                const hours = hourlyCountData.map(item => item.hour);
+                const counts = hourlyCountData.map(item => item.count);
+
+                const hourlyOption = {
+                    title: { text: '每小时答题频次', left: 'center' },
+                    tooltip: { trigger: 'axis' },
+                    xAxis: { type: 'category', data: hours, name: '小时 (0-23)' },
+                    yAxis: { type: 'value', name: '答题次数' },
+                    series: [{ name: '答题次数', type: 'bar', data: counts }] // 或 'line'
+                };
+                hourlyActivityChart.setOption(hourlyOption);
+            } else {
+                 hourlyActivityChart?.clear(); // 清除图表内容
+                 hourlyActivityChart?.showLoading(); // 显示加载动画或提示
+                 console.warn("无法渲染小时活跃图，数据缺失。");
+            }
+
+            // 每日活跃度
+            if (dailyActivityChart && dailyCountData.length > 0) {
+                 // 对数据按日期排序
+                dailyCountData.sort((a, b) => new Date(a.date) - new Date(b.date));
+                const dates = dailyCountData.map(item => item.date);
+                const counts = dailyCountData.map(item => item.count);
+
+                const dailyOption = {
+                    title: { text: '每日答题频次', left: 'center' },
+                    tooltip: { trigger: 'axis' },
+                    xAxis: { type: 'category', data: dates, name: '日期' },
+                    yAxis: { type: 'value', name: '答题次数' },
+                     dataZoom: [ // 添加缩放/漫游组件
+                        { type: 'slider', start: 0, end: 100 },
+                        { type: 'inside', start: 0, end: 100 }
+                    ],
+                    series: [{ name: '答题次数', type: 'line', data: counts, smooth: true }] // 折线图更适合日期趋势
+                };
+                dailyActivityChart.setOption(dailyOption);
+            } else {
+                 dailyActivityChart?.clear();
+                 dailyActivityChart?.showLoading();
+                 console.warn("无法渲染每日活跃图，数据缺失。");
+            }
+
+             // 每月活跃度
+            if (monthlyActivityChart && monthlyCountData.length > 0) {
+                // 对数据按月份排序
+                monthlyCountData.sort((a, b) => a.month - b.month);
+                const months = monthlyCountData.map(item => `${item.month}月`); // 添加 '月' 后缀
+                const counts = monthlyCountData.map(item => item.count);
+
+                const monthlyOption = {
+                    title: { text: '每月答题频次', left: 'center' },
+                    tooltip: { trigger: 'axis' },
+                    xAxis: { type: 'category', data: months, name: '月份' },
+                    yAxis: { type: 'value', name: '答题次数' },
+                    series: [{ name: '答题次数', type: 'bar', data: counts }]
+                };
+                monthlyActivityChart.setOption(monthlyOption);
+            } else {
+                 monthlyActivityChart?.clear();
+                 monthlyActivityChart?.showLoading();
+                 console.warn("无法渲染每月活跃图，数据缺失。");
+            }
+        }
+
+        // 2c (部分): 知识点关系图 (使用上传的 TXT 数据)
+        function renderKnowledgeGraph() {
+            if (!knowledgeGraphChart || Object.keys(graphData).length === 0) {
+                 knowledgeGraphChart?.clear();
+                 knowledgeGraphChart?.showLoading();
+                 console.warn("无法渲染知识点关系图，数据缺失。");
+                return;
+            }
+
+            // 选择第一个加载的图数据进行展示
+            const firstGraphKey = Object.keys(graphData)[0];
+            const data = graphData[firstGraphKey];
+
+            if (!data || !data.nodes || !data.links) {
+                 knowledgeGraphChart?.clear();
+                 knowledgeGraphChart?.showLoading();
+                 console.warn(`图数据 ${firstGraphKey} 格式不正确，无法渲染。`);
+                return;
+            }
+
+            const option = {
+                title: {
+                    text: `知识点关系图 (${firstGraphKey})`,
+                    left: 'center'
+                },
+                tooltip: {}, // 鼠标悬停提示节点或边信息
+                series: [{
+                    type: 'graph',
+                    layout: 'force', // 使用力引导布局
+                    roam: true, // 开启鼠标缩放和平移漫游
+                    label: { // 节点标签设置
+                        show: true,
+                        position: 'right'
+                    },
+                    force: { // 力引导布局配置
+                        repulsion: 100, // 节点之间的斥力因子
+                        edgeLength: 50 // 边的期望长度
+                    },
+                    nodes: data.nodes.map(node => ({ // 转换节点数据格式
+                        id: node.id,
+                        name: node.name,
+                        // 可以根据节点类型（学生/题目）或属性设置不同样式
+                        symbolSize: 15, // 节点大小
+                        itemStyle: {
+                            // color: 根据类型设置颜色
+                        }
+                    })),
+                    links: data.links.map(link => ({ // 转换边数据格式
+                        source: link.source,
+                        target: link.target
+                        // 可以根据边的属性设置样式
+                        // lineStyle: { width: ..., color: ... }
+                    }))
+                }]
+            };
+            knowledgeGraphChart.setOption(option);
+        }
+
+                // 2d: 题目难度分析 (示例：正确率 vs 平均耗时)
+                function renderDifficultyAnalysis() {
+             if (!difficultyAnalysisChart || !timeSeriesData.length) {
+                 difficultyAnalysisChart?.clear();
+                 difficultyAnalysisChart?.showLoading();
+                 console.warn("无法渲染题目难度分析图，时间序列数据缺失。");
+                 return;
+             }
+
+            // 准备散点图数据: [平均耗时, 正确率, 题目ID]
+            const scatterData = timeSeriesData.map(item => [
+                item.timeconsume,
+                item.correct_rate,
+                item.title_ID // 将题目ID作为额外信息传递给 tooltip
+            ]);
+
+            const option = {
+                title: { text: '题目难度分析 (正确率 vs 平均耗时)', left: 'center' },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: (params) => {
+                        // params.data 是 [timeconsume, correct_rate, title_ID]
+                        if (params.data && params.data.length >= 3) {
+                            return `题目ID: ${params.data[2]}<br/>` +
+                                   `平均耗时: ${params.data[0].toFixed(2)} ms<br/>` +
+                                   `正确率: ${(params.data[1] * 100).toFixed(2)}%`;
+                        }
+                        return '';
+                    }
+                },
+                xAxis: {
+                    type: 'value',
+                    name: '平均耗时 (ms)',
+                    splitLine: { show: false } // 不显示 x 轴网格线
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '正确率',
+                    axisLabel: { formatter: '{value}' }, // 可以格式化为百分比 '{value} %'
+                    splitLine: { show: true } // 显示 y 轴网格线
+                },
+                series: [{
+                    name: '题目',
+                    type: 'scatter',
+                    data: scatterData,
+                    symbolSize: 8, // 散点大小
+                    itemStyle: {
+                        // 可以根据耗时或正确率设置颜色
+                        // color: (params) => { ... }
+                    },
+                    // --- 添加标记区域，高亮显示潜在的不合理题目 ---
+                    // 例如：正确率低于 0.2 (20%) 且 耗时高于某个阈值 (比如数据中的 75 分位数)
+                    markArea: {
+                        silent: true, // 标记区域不响应事件
+                        itemStyle: {
+                            color: 'rgba(255, 100, 100, 0.2)' // 淡红色背景
+                        },
+                        data: [[
+                            {
+                                name: '高耗时 & 低正确率区域',
+                                // x 轴范围：假设耗时大于 5000ms
+                                xAxis: '5000', // 或者动态计算一个阈值
+                                // y 轴范围：正确率小于 0.2
+                                yAxis: '0' // 从 y=0 开始
+                            },
+                            {
+                                // x 轴范围：到最大值
+                                // y 轴范围：到 0.2
+                                yAxis: '0.2'
+                            }
+                        ]]
+                    }
+                }]
+            };
+            difficultyAnalysisChart.setOption(option);
+        }
+
+        // --- 其他辅助函数或分析逻辑可以在这里添加 ---
+        // 例如：处理数据清洗、计算特定指标等
+
+    </script>
+</body>
+</html>
