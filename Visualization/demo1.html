@@ -1,1 +1,807 @@
 
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习行为分析</title>
+    <link href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-100-M/font-awesome/6.0.0/css/all.min.css"  rel="stylesheet">
+    <link href="https://s2.ssl.qhres2.com/static/56662140ef7d5d03.css"  rel="stylesheet">
+    <script src="https://s2.ssl.qhres2.com/!2dd0bbf7/echats.js"></script> 
+    <style>
+        :root {
+            --primary: #3a86ff;
+            --secondary: #8338ec;
+            --accent: #ff006e;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --success: #06d6a0;
+            --warning: #ffbe0b;
+            --danger: #ef476f;
+            --chart-height: 420px;
+            --large-chart-height: 500px;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: auto 1fr 1fr 1fr;
+            gap: 1rem;
+            padding: 1rem;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        
+        .header {
+            grid-column: 1 / -1;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 0.5rem;
+        }
+        
+        .chart-container {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+        }
+        
+        .learning-mode {
+            grid-column: span 4;
+            grid-row: span 1;
+            height: var(--large-chart-height);
+        }
+        
+        .difficulty-analysis {
+            grid-column: span 4;
+            grid-row: span 1;
+            height: var(--large-chart-height);
+        }
+        
+        .student-radar {
+            grid-column: span 4;
+            grid-row: span 1;
+            height: var(--large-chart-height);
+        }
+        
+        .knowledge-flow {
+            grid-column: span 6;
+            grid-row: span 1;
+            height: var(--chart-height);
+        }
+        
+        .answer-patterns {
+            grid-column: span 6;
+            grid-row: span 1;
+            height: var(--chart-height);
+        }
+        
+        .data-import {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            width: 300px;
+            z-index: 100;
+            background: rgba(26, 26, 46, 0.9);
+            border: 1px solid var(--primary);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+        
+        .data-import.collapsed  {
+            transform: translateY(calc(100% - 40px));
+        }
+        
+        .data-import-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        
+        .data-import-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            padding: 0.75rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-label:hover {
+            background: var(--secondary);
+        }
+        
+        .btn {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            
+            .learning-mode, .difficulty-analysis, .student-radar {
+                grid-column: span 3;
+            }
+            
+            .knowledge-flow, .answer-patterns {
+                grid-column: span 6;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: auto repeat(5, 1fr);
+            }
+            
+            .learning-mode, .difficulty-analysis, .student-radar, 
+            .knowledge-flow, .answer-patterns {
+                grid-column: span 2;
+            }
+            
+            .data-import {
+                width: calc(100% - 4rem);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <h1>学习行为分析大屏 <span class="text-sm opacity-75">Learning Behavior Analytics Dashboard</span></h1>
+            <div class="flex items-center gap-4">
+                <span class="text-sm">Shimmer</span>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-cog mr-2"></i>设置
+                </button>
+            </div>
+        </header>
+        
+        <div class="card learning-mode">
+            <div class="card-header">
+                <i class="fas fa-brain mr-2"></i>学习模式与知识掌握关系
+            </div>
+            <div class="chart-container" id="learningModeChart"></div>
+        </div>
+        
+        <div class="card difficulty-analysis">
+            <div class="card-header">
+                <i class="fas fa-balance-scale mr-2"></i>题目难度匹配分析
+            </div>
+            <div class="chart-container" id="difficultyChart"></div>
+        </div>
+        
+        <div class="card student-radar">
+            <div class="card-header">
+                <i class="fas fa-user-shield mr-2"></i>学生画像雷达图
+            </div>
+            <div class="chart-container" id="radarChart"></div>
+        </div>
+        
+        <div class="card knowledge-flow">
+            <div class="card-header">
+                <i class="fas fa-project-diagram mr-2"></i>知识点关联流动
+            </div>
+            <div class="chart-container" id="knowledgeFlowChart"></div>
+        </div>
+        
+        <div class="card answer-patterns">
+            <div class="card-header">
+                <i class="fas fa-chart-line mr-2"></i>答题模式分析
+            </div>
+            <div class="chart-container" id="answerPatternsChart"></div>
+        </div>
+        
+        <div class="data-import">
+            <div class="data-import-header" onclick="toggleDataImport()">
+                <h3>数据导入</h3>
+                <button class="toggle-btn">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="data-import-content">
+                <input type="file" id="studentInfo" class="file-input" accept=".csv">
+                <label for="studentInfo" class="file-label">
+                    <i class="fas fa-user-graduate mr-2"></i>导入学生信息
+                </label>
+                
+                <input type="file" id="titleInfo" class="file-input" accept=".csv">
+                <label for="titleInfo" class="file-label">
+                    <i class="fas fa-question-circle mr-2"></i>导入题目信息
+                </label>
+                
+                <input type="file" id="submitRecord" class="file-input" accept=".csv" multiple>
+                <label for="submitRecord" class="file-label">
+                    <i class="fas fa-history mr-2"></i>导入答题记录
+                </label>
+                
+                <button class="btn btn-primary" onclick="processData()">
+                    <i class="fas fa-cogs mr-2"></i>处理数据
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化图表
+        function initCharts() {
+            // 学习模式与知识掌握关系图
+            const learningModeChart = echarts.init(document.getElementById('learningModeChart')); 
+            learningModeChart.setOption({ 
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['自主学习', '小组学习', '教师指导'],
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    axisLine: {
+                        lineStyle: {
+                            color: 'rgba(255, 255, 255, 0.3)'
+                        }
+                    },
+                    axisLabel: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: ['知识点1', '知识点2', '知识点3', '知识点4', '知识点5'],
+                    axisLine: {
+                        lineStyle: {
+                            color: 'rgba(255, 255, 255, 0.3)'
+                        }
+                    },
+                    axisLabel: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                },
+                series: [
+                    {
+                        name: '自主学习',
+                        type: 'bar',
+                        stack: 'total',
+                        label: {
+                            show: true,
+                            position: 'inside'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [320, 302, 341, 374, 390],
+                        itemStyle: {
+                            color: '#3a86ff'
+                        }
+                    },
+                    {
+                        name: '小组学习',
+                        type: 'bar',
+                        stack: 'total',
+                        label: {
+                            show: true,
+                            position: 'inside'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [120, 132, 101, 134, 90],
+                        itemStyle: {
+                            color: '#8338ec'
+                        }
+                    },
+                    {
+                        name: '教师指导',
+                        type: 'bar',
+                        stack: 'total',
+                        label: {
+                            show: true,
+                            position: 'inside'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [220, 182, 191, 234, 290],
+                        itemStyle: {
+                            color: '#ff006e'
+                        }
+                    }
+                ]
+            });
+            
+            // 题目难度匹配分析图
+            const difficultyChart = echarts.init(document.getElementById('difficultyChart')); 
+            difficultyChart.setOption({ 
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 10,
+                    data: ['匹配良好', '难度过高', '难度过低'],
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                series: [
+                    {
+                        name: '难度匹配情况',
+                        type: 'pie',
+                        radius: ['50%', '70%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: {
+                            borderRadius: 10,
+                            borderColor: '#1a1a2e',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: '18',
+                                fontWeight: 'bold',
+                                color: 'white'
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        data: [
+                            { value: 335, name: '匹配良好', itemStyle: { color: '#06d6a0' } },
+                            { value: 310, name: '难度过高', itemStyle: { color: '#ef476f' } },
+                            { value: 234, name: '难度过低', itemStyle: { color: '#ffbe0b' } }
+                        ]
+                    }
+                ]
+            });
+            
+            // 学生画像雷达图
+            const radarChart = echarts.init(document.getElementById('radarChart')); 
+            radarChart.setOption({ 
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    data: ['平均学生', '优秀学生', '困难学生'],
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                radar: {
+                    indicator: [
+                        { name: '答题正确率', max: 100 },
+                        { name: '答题速度', max: 100 },
+                        { name: '知识广度', max: 100 },
+                        { name: '知识深度', max: 100 },
+                        { name: '学习坚持度', max: 100 },
+                        { name: '错题改进率', max: 100 }
+                    ],
+                    axisName: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    splitArea: {
+                        show: false
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: 'rgba(255, 255, 255, 0.3)'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: '学生画像对比',
+                        type: 'radar',
+                        data: [
+                            {
+                                value: [75, 65, 70, 60, 80, 70],
+                                name: '平均学生',
+                                areaStyle: {
+                                    color: 'rgba(58, 134, 255, 0.4)'
+                                },
+                                lineStyle: {
+                                    color: '#3a86ff'
+                                }
+                            },
+                            {
+                                value: [95, 85, 90, 88, 92, 89],
+                                name: '优秀学生',
+                                areaStyle: {
+                                    color: 'rgba(6, 214, 160, 0.4)'
+                                },
+                                lineStyle: {
+                                    color: '#06d6a0'
+                                }
+                            },
+                            {
+                                value: [45, 50, 40, 35, 60, 30],
+                                name: '困难学生',
+                                areaStyle: {
+                                    color: 'rgba(239, 71, 111, 0.4)'
+                                },
+                                lineStyle: {
+                                    color: '#ef476f'
+                                }
+                            }
+                        ]
+                    }
+                ]
+            });
+            
+            // 知识点关联流动图
+            const knowledgeFlowChart = echarts.init(document.getElementById('knowledgeFlowChart')); 
+            knowledgeFlowChart.setOption({ 
+                tooltip: {
+                    trigger: 'item',
+                    triggerOn: 'mousemove'
+                },
+                series: [
+                    {
+                        type: 'sankey',
+                        data: [
+                            { name: '知识点1' },
+                            { name: '知识点2' },
+                            { name: '知识点3' },
+                            { name: '知识点4' },
+                            { name: '知识点5' },
+                            { name: '知识点6' },
+                            { name: '知识点7' }
+                        ],
+                        links: [
+                            { source: '知识点1', target: '知识点2', value: 10 },
+                            { source: '知识点1', target: '知识点3', value: 15 },
+                            { source: '知识点2', target: '知识点4', value: 8 },
+                            { source: '知识点3', target: '知识点5', value: 12 },
+                            { source: '知识点4', target: '知识点6', value: 6 },
+                            { source: '知识点5', target: '知识点6', value: 5 },
+                            { source: '知识点5', target: '知识点7', value: 7 },
+                            { source: '知识点6', target: '知识点7', value: 10 }
+                        ],
+                        emphasis: {
+                            focus: 'adjacency'
+                        },
+                        levels: [
+                            {
+                                depth: 0,
+                                itemStyle: {
+                                    color: '#3a86ff'
+                                }
+                            },
+                            {
+                                depth: 1,
+                                itemStyle: {
+                                    color: '#8338ec'
+                                }
+                            },
+                            {
+                                depth: 2,
+                                itemStyle: {
+                                    color: '#ff006e'
+                                }
+                            }
+                        ],
+                        lineStyle: {
+                            color: 'gradient',
+                            curveness: 0.5
+                        },
+                        label: {
+                            color: 'white'
+                        }
+                    }
+                ]
+            });
+            
+            // 答题模式分析图
+            const answerPatternsChart = echarts.init(document.getElementById('answerPatternsChart')); 
+            answerPatternsChart.setOption({ 
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross',
+                        label: {
+                            backgroundColor: '#6a7985'
+                        }
+                    }
+                },
+                legend: {
+                    data: ['完全正确', '部分正确', '错误', '超时'],
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: [
+                    {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                        axisLine: {
+                            lineStyle: {
+                                color: 'rgba(255, 255, 255, 0.3)'
+                            }
+                        },
+                        axisLabel: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        axisLine: {
+                            lineStyle: {
+                                color: 'rgba(255, 255, 255, 0.3)'
+                            }
+                        },
+                        axisLabel: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                ],
+                series: [
+                    {
+                        name: '完全正确',
+                        type: 'line',
+                        stack: '总量',
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0,  0, 0, 1, [
+                                {
+                                    offset: 0,
+                                    color: 'rgba(58, 134, 255, 0.8)'
+                                },
+                                {
+                                    offset: 1,
+                                    color: 'rgba(58, 134, 255, 0.1)'
+                                }
+                            ])
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [120, 132, 101, 134, 90, 230, 210],
+                        smooth: true,
+                        lineStyle: {
+                            width: 3,
+                            color: '#3a86ff'
+                        }
+                    },
+                    {
+                        name: '部分正确',
+                        type: 'line',
+                        stack: '总量',
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0,  0, 0, 1, [
+                                {
+                                    offset: 0,
+                                    color: 'rgba(131, 56, 236, 0.8)'
+                                },
+                                {
+                                    offset: 1,
+                                    color: 'rgba(131, 56, 236, 0.1)'
+                                }
+                            ])
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [220, 182, 191, 234, 290, 330, 310],
+                        smooth: true,
+                        lineStyle: {
+                            width: 3,
+                            color: '#8338ec'
+                        }
+                    },
+                    {
+                        name: '错误',
+                        type: 'line',
+                        stack: '总量',
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0,  0, 0, 1, [
+                                {
+                                    offset: 0,
+                                    color: 'rgba(255, 0, 110, 0.8)'
+                                },
+                                {
+                                    offset: 1,
+                                    color: 'rgba(255, 0, 110, 0.1)'
+                                }
+                            ])
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [150, 232, 201, 154, 190, 330, 410],
+                        smooth: true,
+                        lineStyle: {
+                            width: 3,
+                            color: '#ff006e'
+                        }
+                    },
+                    {
+                        name: '超时',
+                        type: 'line',
+                        stack: '总量',
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0,  0, 0, 1, [
+                                {
+                                    offset: 0,
+                                    color: 'rgba(239, 71, 111, 0.8)'
+                                },
+                                {
+                                    offset: 1,
+                                    color: 'rgba(239, 71, 111, 0.1)'
+                                }
+                            ])
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [320, 332, 301, 334, 390, 330, 320],
+                        smooth: true,
+                        lineStyle: {
+                            width: 3,
+                            color: '#ef476f'
+                        }
+                    }
+                ]
+            });
+            
+            // 窗口大小变化时重新调整图表大小
+            window.addEventListener('resize',  function() {
+                learningModeChart.resize(); 
+                difficultyChart.resize(); 
+                radarChart.resize(); 
+                knowledgeFlowChart.resize(); 
+                answerPatternsChart.resize(); 
+            });
+        }
+        
+        // 切换数据导入面板
+        function toggleDataImport() {
+            const dataImport = document.querySelector('.data-import'); 
+            dataImport.classList.toggle('collapsed'); 
+            
+            const icon = dataImport.querySelector('.toggle-btn  i');
+            if (dataImport.classList.contains('collapsed'))  {
+                icon.classList.remove('fa-chevron-down'); 
+                icon.classList.add('fa-chevron-up'); 
+            } else {
+                icon.classList.remove('fa-chevron-up'); 
+                icon.classList.add('fa-chevron-down'); 
+            }
+        }
+        
+        // 处理导入的数据
+        function processData() {
+            alert('数据正在处理中...');
+            // 这里可以添加实际的数据处理逻辑
+        }
+        
+        // 页面加载完成后初始化图表
+        document.addEventListener('DOMContentLoaded',  function() {
+            initCharts();
+        });
+    </script>
+</body>
+</html>
