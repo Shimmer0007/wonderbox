@@ -1,121 +1,102 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>学习行为分析可视化大屏</title>
+    <title>学习行为分析数据大屏 | Academic Data Viz</title>
     <link href="https://s2.ssl.qhres2.com/static/56662140ef7d5d03.css"  rel="stylesheet">
     <link href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-100-M/font-awesome/6.0.0/css/all.min.css"  rel="stylesheet">
     <script src="https://s2.ssl.qhres2.com/!2dd0bbf7/echats.js"></script> 
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script> 
     <style>
         :root {
-            --primary: #3a86ff;
-            --secondary: #8338ec;
-            --accent: #ff006e;
-            --dark: #1a1a2e;
-            --light: #f8f9fa;
-            --success: #06d6a0;
-            --warning: #ffbe0b;
-            --danger: #ef476f;
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #1a1a1a;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --font-main: 'Helvetica Neue', Arial, sans-serif;
+            --font-accent: 'Georgia', serif;
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         
         body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--dark);
-            color: var(--light);
+            font-family: var(--font-main);
+            background-color: #f5f7fa;
+            color: var(--dark);
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
             line-height: 1.6;
+            overflow-x: hidden;
         }
         
         .container {
-            max-width: 100%;
-            padding: 0 1rem;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
         }
         
-        .dashboard-header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            padding: 1.5rem 0;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
         }
         
-        .dashboard-header::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 L0,100 Z" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></svg>');
-            opacity: 0.3;
-        }
-        
-        .header-title {
+        .title {
+            font-family: var(--font-accent);
             font-size: 2.5rem;
-            font-weight: 700;
-            text-align: center;
+            font-weight: 300;
+            color: var(--primary);
+            letter-spacing: -0.05em;
             margin: 0;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            letter-spacing: 1px;
         }
         
-        .header-subtitle {
-            font-size: 1.2rem;
-            text-align: center;
-            margin: 0.5rem 0 0;
-            color: rgba(255, 255, 255, 0.9);
+        .subtitle {
+            font-size: 1rem;
+            color: #7f8c8d;
+            margin-top: 0.5rem;
             font-weight: 300;
         }
         
-        .grid {
+        .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
         
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
+        .panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             padding: 1.5rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
             transition: var(--transition);
         }
         
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-            border-color: rgba(255, 255, 255, 0.2);
+        .panel:hover {
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
         }
         
-        .card-header {
+        .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
             padding-bottom: 0.75rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
         }
         
-        .card-title {
+        .panel-title {
             font-size: 1.25rem;
-            font-weight: 600;
-            margin: 0;
-            color: white;
-        }
-        
-        .card-icon {
-            font-size: 1.5rem;
+            font-weight: 500;
             color: var(--primary);
+            margin: 0;
         }
         
         .chart-container {
@@ -125,233 +106,135 @@
         }
         
         .file-upload-area {
-            grid-column: span 3;
-        }
-        
-        .upload-box {
-            border: 2px dashed rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
+            border: 2px dashed #bdc3c7;
+            border-radius: 6px;
             padding: 2rem;
             text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-bottom: 1rem;
-        }
-        
-        .upload-box:hover {
-            border-color: var(--primary);
-            background: rgba(58, 134, 255, 0.1);
-        }
-        
-        .upload-icon {
-            font-size: 2.5rem;
-            color: var(--primary);
-            margin-bottom: 1rem;
-        }
-        
-        .upload-text {
-            font-size: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 0.6rem 1.2rem;
-            border-radius: 6px;
-            font-weight: 500;
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-            border: none;
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn:hover {
-            background: #2a75e6;
-            transform: translateY(-2px);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
-        
-        .data-table th, .data-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .data-table th {
-            font-weight: 600;
-            color: var(--primary);
-            background: rgba(58, 134, 255, 0.1);
-        }
-        
-        .data-table tr:hover td {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        .knowledge-graph {
-            grid-column: span 4;
-        }
-        
-        .time-analysis {
-            grid-column: span 5;
-        }
-        
-        .student-profile {
-            grid-column: span 4;
-        }
-        
-        .question-analysis {
-            grid-column: span 4;
-        }
-        
-        .learning-pattern {
-            grid-column: span 4;
-        }
-        
-        .difficulty-matching {
-            grid-column: span 4;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
             margin-bottom: 1.5rem;
+            transition: var(--transition);
+            cursor: pointer;
         }
         
-        .stat-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-            border-left: 4px solid var(--primary);
+        .file-upload-area:hover {
+            border-color: var(--secondary);
+            background-color: rgba(52, 152, 219, 0.05);
         }
         
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 0.5rem 0;
-            color: white;
-        }
-        
-        .stat-label {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        .file-upload-icon {
+            font-size: 2.5rem;
+            color: #95a5a6;
             margin-bottom: 1rem;
         }
         
-        .tab {
-            padding: 0.75rem 1.5rem;
+        .file-upload-text {
+            font-size: 1rem;
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+        }
+        
+        .file-upload-btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
             cursor: pointer;
-            border-bottom: 3px solid transparent;
             transition: var(--transition);
         }
         
-        .tab.active  {
-            border-bottom-color: var(--primary);
-            color: var(--primary);
+        .file-upload-btn:hover {
+            background-color: #2980b9;
         }
         
-        .tab:hover:not(.active) {
-            border-bottom-color: rgba(255, 255, 255, 0.2);
-        }
-        
-        .tab-content {
+        .file-input {
             display: none;
         }
         
-        .tab-content.active  {
-            display: block;
-        }
-        
-        .tooltip {
-            position: absolute;
-            padding: 0.5rem 1rem;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 4px;
-            color: white;
-            font-size: 0.9rem;
-            pointer-events: none;
-            z-index: 100;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
+        .uploaded-files {
             margin-top: 1rem;
         }
         
-        .legend-item {
+        .file-item {
             display: flex;
             align-items: center;
-            font-size: 0.8rem;
+            padding: 0.75rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
         }
         
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-            margin-right: 0.5rem;
+        .file-icon {
+            margin-right: 0.75rem;
+            color: #7f8c8d;
+        }
+        
+        .file-name {
+            flex-grow: 1;
+            font-size: 0.9rem;
+        }
+        
+        .file-size {
+            font-size: 0.8rem;
+            color: #95a5a6;
+            margin-right: 1rem;
+        }
+        
+        .file-remove {
+            color: var(--accent);
+            cursor: pointer;
+        }
+        
+        .full-width {
+            grid-column: span 12;
+        }
+        
+        .half-width {
+            grid-column: span 6;
+        }
+        
+        .third-width {
+            grid-column: span 4;
+        }
+        
+        .quarter-width {
+            grid-column: span 3;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: #95a5a6;
+            font-size: 0.9rem;
         }
         
         @media (max-width: 1200px) {
-            .grid {
-                grid-template-columns: repeat(6, 1fr);
+            .half-width {
+                grid-column: span 12;
             }
             
-            .file-upload-area, .knowledge-graph, .time-analysis, 
-            .student-profile, .question-analysis, .learning-pattern, 
-            .difficulty-matching {
+            .third-width {
+                grid-column: span 6;
+            }
+            
+            .quarter-width {
                 grid-column: span 6;
             }
         }
         
         @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .file-upload-area, .knowledge-graph, .time-analysis, 
-            .student-profile, .question-analysis, .learning-pattern, 
-            .difficulty-matching {
-                grid-column: span 2;
+            .third-width, .quarter-width {
+                grid-column: span 12;
             }
         }
         
-        /* 动画效果 */
+        /* 自定义动画 */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .animate-fadeIn {
+        .animate-fadein {
             animation: fadeIn 0.6s ease-out forwards;
         }
         
@@ -360,249 +243,468 @@
         .delay-3 { animation-delay: 0.3s; }
         .delay-4 { animation-delay: 0.4s; }
         .delay-5 { animation-delay: 0.5s; }
+        
+        /* 高级排版细节 */
+        .typography-lead {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            letter-spacing: 0.01em;
+            color: #34495e;
+        }
+        
+        .drop-cap::first-letter {
+            float: left;
+            font-size: 3.5rem;
+            line-height: 0.9;
+            margin-right: 0.5rem;
+            margin-top: 0.25rem;
+            font-family: var(--font-accent);
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
-    <div class="dashboard-header">
-        <div class="container">
-            <h1 class="header-title">学习行为分析可视化平台</h1>
-            <p class="header-subtitle">Learning Behavior Analytics Dashboard</p>
-        </div>
-    </div>
-    
     <div class="container">
-        <!-- 数据上传区域 -->
-        <div class="grid">
-            <div class="card file-upload-area animate-fadeIn delay-1">
-                <div class="card-header">
-                    <h2 class="card-title">数据上传</h2>
-                    <i class="fas fa-cloud-upload-alt card-icon"></i>
+        <header class="header animate-fadein">
+            <div>
+                <h1 class="title">学习行为分析数据大屏</h1>
+                <p class="subtitle">Interactive Learning Behavior Analytics Dashboard</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-600">最后更新: 2025-04-18</p>
+            </div>
+        </header>
+        
+        <div class="dashboard-grid">
+            <!-- 学生基本信息面板 -->
+            <div class="panel third-width animate-fadein delay-1">
+                <div class="panel-header">
+                    <h3 class="panel-title">学生基本信息</h3>
+                    <i class="fas fa-user-graduate text-gray-400"></i>
                 </div>
-                <div class="upload-box" id="uploadBox">
-                    <i class="fas fa-file-upload upload-icon"></i>
-                    <p class="upload-text">拖放文件到此处或点击选择文件</p>
-                    <input type="file" id="fileInput" style="display: none;" multiple>
-                    <button class="btn" onclick="document.getElementById('fileInput').click()"> 选择文件</button>
+                <div class="file-upload-area" id="studentInfoUpload">
+                    <div class="file-upload-icon">
+                        <i class="fas fa-file-csv"></i>
+                    </div>
+                    <p class="file-upload-text">上传学生基本信息CSV文件</p>
+                    <button class="file-upload-btn">选择文件</button>
+                    <input type="file" class="file-input" accept=".csv" id="studentInfoFile">
                 </div>
-                <div class="upload-status" id="uploadStatus"></div>
-                
-                <div class="tabs">
-                    <div class="tab active" onclick="switchTab('studentInfoTab')">学生信息</div>
-                    <div class="tab" onclick="switchTab('titleInfoTab')">题目信息</div>
-                    <div class="tab" onclick="switchTab('submitRecordTab')">答题记录</div>
-                </div>
-                
-                <div class="tab-content active" id="studentInfoTab">
-                    <p>上传学生基本信息表 (Data_StudentInfo.csv)</p> 
-                    <div class="data-preview" id="studentInfoPreview"></div>
-                </div>
-                
-                <div class="tab-content" id="titleInfoTab">
-                    <p>上传题目基本信息表 (Data_TitleInfo.csv)</p> 
-                    <div class="data-preview" id="titleInfoPreview"></div>
-                </div>
-                
-                <div class="tab-content" id="submitRecordTab">
-                    <p>上传班级答题记录 (SubmitRecord-Class*.csv)</p>
-                    <div class="data-preview" id="submitRecordPreview"></div>
-                </div>
+                <div class="uploaded-files" id="studentInfoFiles"></div>
+                <div class="chart-container" id="studentInfoChart"></div>
             </div>
             
-            <!-- 知识点掌握情况 -->
-            <div class="card knowledge-graph animate-fadeIn delay-2">
-                <div class="card-header">
-                    <h2 class="card-title">知识点掌握情况</h2>
-                    <i class="fas fa-brain card-icon"></i>
+            <!-- 题目基本信息面板 -->
+            <div class="panel third-width animate-fadein delay-2">
+                <div class="panel-header">
+                    <h3 class="panel-title">题目基本信息</h3>
+                    <i class="fas fa-question-circle text-gray-400"></i>
                 </div>
-                <div class="chart-container" id="knowledgeGraph"></div>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #3a86ff;"></div>
-                        <span>掌握良好</span>
+                <div class="file-upload-area" id="titleInfoUpload">
+                    <div class="file-upload-icon">
+                        <i class="fas fa-file-csv"></i>
                     </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #ffbe0b;"></div>
-                        <span>需要加强</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #ef476f;"></div>
-                        <span>薄弱环节</span>
-                    </div>
+                    <p class="file-upload-text">上传题目基本信息CSV文件</p>
+                    <button class="file-upload-btn">选择文件</button>
+                    <input type="file" class="file-input" accept=".csv" id="titleInfoFile">
                 </div>
+                <div class="uploaded-files" id="titleInfoFiles"></div>
+                <div class="chart-container" id="titleInfoChart"></div>
             </div>
             
-            <!-- 时间分析 -->
-            <div class="card time-analysis animate-fadeIn delay-3">
-                <div class="card-header">
-                    <h2 class="card-title">答题时间分布</h2>
-                    <i class="fas fa-clock card-icon"></i>
+            <!-- 答题行为日志面板 -->
+            <div class="panel third-width animate-fadein delay-3">
+                <div class="panel-header">
+                    <h3 class="panel-title">答题行为日志</h3>
+                    <i class="fas fa-clipboard-list text-gray-400"></i>
                 </div>
-                <div class="tabs">
-                    <div class="tab active" onclick="switchTimeChart('daily')">每日</div>
-                    <div class="tab" onclick="switchTimeChart('hourly')">每小时</div>
-                    <div class="tab" onclick="switchTimeChart('monthly')">每月</div>
+                <div class="file-upload-area" id="submitRecordUpload">
+                    <div class="file-upload-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <p class="file-upload-text">上传答题行为日志文件夹 (CSV文件)</p>
+                    <button class="file-upload-btn">选择文件夹</button>
+                    <input type="file" class="file-input" webkitdirectory directory multiple id="submitRecordFiles">
+                </div>
+                <div class="uploaded-files" id="submitRecordFilesList"></div>
+                <div class="chart-container" id="submitRecordChart"></div>
+            </div>
+            
+            <!-- 知识点图结构面板 -->
+            <div class="panel half-width animate-fadein delay-1">
+                <div class="panel-header">
+                    <h3 class="panel-title">知识点图结构分析</h3>
+                    <i class="fas fa-project-diagram text-gray-400"></i>
+                </div>
+                <div class="file-upload-area" id="knowledgeGraphUpload">
+                    <div class="file-upload-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <p class="file-upload-text">上传知识点图结构文本文件 (vis_graph_kk*.txt)</p>
+                    <button class="file-upload-btn">选择文件</button>
+                    <input type="file" class="file-input" multiple accept=".txt" id="knowledgeGraphFiles">
+                </div>
+                <div class="uploaded-files" id="knowledgeGraphFilesList"></div>
+                <div class="chart-container" id="knowledgeGraphChart"></div>
+            </div>
+            
+            <!-- 从属知识点图结构面板 -->
+            <div class="panel half-width animate-fadein delay-2">
+                <div class="panel-header">
+                    <h3 class="panel-title">从属知识点图结构分析</h3>
+                    <i class="fas fa-sitemap text-gray-400"></i>
+                </div>
+                <div class="file-upload-area" id="subKnowledgeGraphUpload">
+                    <div class="file-upload-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <p class="file-upload-text">上传从属知识点图结构文本文件 (vis_graph_k*.txt)</p>
+                    <button class="file-upload-btn">选择文件</button>
+                    <input type="file" class="file-input" multiple accept=".txt" id="subKnowledgeGraphFiles">
+                </div>
+                <div class="uploaded-files" id="subKnowledgeGraphFilesList"></div>
+                <div class="chart-container" id="subKnowledgeGraphChart"></div>
+            </div>
+            
+            <!-- 时间维度分析面板 -->
+            <div class="panel full-width animate-fadein delay-3">
+                <div class="panel-header">
+                    <h3 class="panel-title">时间维度分析</h3>
+                    <i class="fas fa-clock text-gray-400"></i>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div class="file-upload-area" id="dailyAnswerUpload">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <p class="file-upload-text">每日答题统计 (daily_answer_count.csv)</p> 
+                        <button class="file-upload-btn">选择文件</button>
+                        <input type="file" class="file-input" accept=".csv" id="dailyAnswerFile">
+                    </div>
+                    <div class="file-upload-area" id="hourlyAnswerUpload">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                        <p class="file-upload-text">每小时答题统计 (hourly_answer_count.csv)</p> 
+                        <button class="file-upload-btn">选择文件</button>
+                        <input type="file" class="file-input" accept=".csv" id="hourlyAnswerFile">
+                    </div>
+                    <div class="file-upload-area" id="monthlyAnswerUpload">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <p class="file-upload-text">每月答题统计 (monthly_answer_count.csv)</p> 
+                        <button class="file-upload-btn">选择文件</button>
+                        <input type="file" class="file-input" accept=".csv" id="monthlyAnswerFile">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div class="uploaded-files" id="dailyAnswerFiles"></div>
+                    <div class="uploaded-files" id="hourlyAnswerFiles"></div>
+                    <div class="uploaded-files" id="monthlyAnswerFiles"></div>
                 </div>
                 <div class="chart-container" id="timeAnalysisChart"></div>
             </div>
-        </div>
-        
-        <!-- 第二行 -->
-        <div class="grid">
-            <!-- 学生画像 -->
-            <div class="card student-profile animate-fadeIn delay-2">
-                <div class="card-header">
-                    <h2 class="card-title">学生画像</h2>
-                    <i class="fas fa-user-graduate card-icon"></i>
+            
+            <!-- 时间序列分析面板 -->
+            <div class="panel full-width animate-fadein delay-4">
+                <div class="panel-header">
+                    <h3 class="panel-title">时间序列分析</h3>
+                    <i class="fas fa-chart-line text-gray-400"></i>
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">学生总数</div>
-                        <div class="stat-value" id="totalStudents">0</div>
+                <div class="file-upload-area" id="timeSeriesUpload">
+                    <div class="file-upload-icon">
+                        <i class="fas fa-file-csv"></i>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">平均年龄</div>
-                        <div class="stat-value" id="avgAge">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">性别比例</div>
-                        <div class="stat-value" id="genderRatio">0:0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">专业数量</div>
-                        <div class="stat-value" id="majorCount">0</div>
-                    </div>
+                    <p class="file-upload-text">上传时间序列分析文件 (time_series_analysis.csv)</p> 
+                    <button class="file-upload-btn">选择文件</button>
+                    <input type="file" class="file-input" accept=".csv" id="timeSeriesFile">
                 </div>
-                <div class="chart-container" id="studentProfileChart"></div>
+                <div class="uploaded-files" id="timeSeriesFiles"></div>
+                <div class="chart-container" id="timeSeriesChart"></div>
             </div>
             
-            <!-- 题目分析 -->
-            <div class="card question-analysis animate-fadeIn delay-3">
-                <div class="card-header">
-                    <h2 class="card-title">题目分析</h2>
-                    <i class="fas fa-question-circle card-icon"></i>
+            <!-- 综合分析面板 -->
+            <div class="panel full-width animate-fadein delay-5">
+                <div class="panel-header">
+                    <h3 class="panel-title">综合分析结果</h3>
+                    <i class="fas fa-chart-pie text-gray-400"></i>
                 </div>
-                <div class="chart-container" id="questionAnalysisChart"></div>
-                <div class="data-table-container" style="max-height: 200px; overflow-y: auto;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>题目ID</th>
-                                <th>正确率</th>
-                                <th>平均用时(ms)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="questionTableBody">
-                            <!-- 数据将通过JavaScript动态填充 -->
-                        </tbody>
-                    </table>
+                <div class="typography-lead drop-cap">
+                    上传所有必要数据文件后，系统将自动进行多维度交叉分析，展示学习者知识掌握程度、薄弱环节识别、学习行为模式以及题目难度匹配度等综合分析结果。请确保已上传学生基本信息、题目信息、答题日志以及时间序列数据以获得完整分析。
                 </div>
-            </div>
-            
-            <!-- 学习模式 -->
-            <div class="card learning-pattern animate-fadeIn delay-4">
-                <div class="card-header">
-                    <h2 class="card-title">学习模式分析</h2>
-                    <i class="fas fa-chart-line card-icon"></i>
-                </div>
-                <div class="chart-container" id="learningPatternChart"></div>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #3a86ff;"></div>
-                        <span>高效学习者</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #ffbe0b;"></div>
-                        <span>中等学习者</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #ef476f;"></div>
-                        <span>低效学习者</span>
-                    </div>
+                <div class="grid grid-cols-2 gap-8 mt-6">
+                    <div class="chart-container" id="comprehensiveChart1"></div>
+                    <div class="chart-container" id="comprehensiveChart2"></div>
                 </div>
             </div>
         </div>
         
-        <!-- 第三行 -->
-        <div class="grid">
-            <!-- 难度匹配分析 -->
-            <div class="card difficulty-matching animate-fadeIn delay-3">
-                <div class="card-header">
-                    <h2 class="card-title">题目难度匹配</h2>
-                    <i class="fas fa-balance-scale card-icon"></i>
-                </div>
-                <div class="chart-container" id="difficultyMatchingChart"></div>
-                <div class="data-table-container" style="max-height: 200px; overflow-y: auto;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>题目ID</th>
-                                <th>知识点掌握度</th>
-                                <th>正确率</th>
-                                <th>匹配状态</th>
-                            </tr>
-                        </thead>
-                        <tbody id="difficultyTableBody">
-                            <!-- 数据将通过JavaScript动态填充 -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- 知识点关系图 -->
-            <div class="card knowledge-graph animate-fadeIn delay-4" style="grid-column: span 8;">
-                <div class="card-header">
-                    <h2 class="card-title">知识点关系网络</h2>
-                    <i class="fas fa-project-diagram card-icon"></i>
-                </div>
-                <div class="chart-container" id="knowledgeNetworkChart" style="height: 400px;"></div>
-            </div>
-        </div>
+        <footer class="footer">
+            <p>© 2025 学习行为分析系统 | Learning Behavior Analytics System</p>
+            <p class="text-xs mt-2">Design avec élégance et précision académique</p>
+        </footer>
     </div>
-    
-    <div class="tooltip" id="tooltip"></div>
-    
+ 
     <script>
-        // 全局变量存储数据
-        let studentData = [];
-        let titleData = [];
-        let submitData = [];
-        let processedData = {};
+        // 初始化所有ECharts实例 
+        const studentInfoChart = echarts.init(document.getElementById('studentInfoChart')); 
+        const titleInfoChart = echarts.init(document.getElementById('titleInfoChart')); 
+        const submitRecordChart = echarts.init(document.getElementById('submitRecordChart')); 
+        const knowledgeGraphChart = echarts.init(document.getElementById('knowledgeGraphChart')); 
+        const subKnowledgeGraphChart = echarts.init(document.getElementById('subKnowledgeGraphChart')); 
+        const timeAnalysisChart = echarts.init(document.getElementById('timeAnalysisChart')); 
+        const timeSeriesChart = echarts.init(document.getElementById('timeSeriesChart')); 
+        const comprehensiveChart1 = echarts.init(document.getElementById('comprehensiveChart1')); 
+        const comprehensiveChart2 = echarts.init(document.getElementById('comprehensiveChart2')); 
         
-        // 初始化所有图表
-        function initCharts() {
-            initKnowledgeGraph();
-            initTimeAnalysisChart();
-            initStudentProfileChart();
-            initQuestionAnalysisChart();
-            initLearningPatternChart();
-            initDifficultyMatchingChart();
-            initKnowledgeNetworkChart();
-        }
+        // 设置默认的空图表配置 
+        const setEmptyChart = (chartInstance, title) => {
+            chartInstance.setOption({ 
+                title: {
+                    text: '请上传' + title + '数据文件',
+                    left: 'center',
+                    top: 'center',
+                    textStyle: {
+                        color: '#999',
+                        fontWeight: 'normal',
+                        fontSize: 14 
+                    }
+                },
+                graphic: {
+                    type: 'text',
+                    left: 'center',
+                    top: '40%',
+                    style: {
+                        text: '暂无数据',
+                        fontSize: '14px',
+                        fill: '#ccc'
+                    }
+                }
+            });
+        };
         
-        // 知识点掌握情况图表
-        function initKnowledgeGraph() {
-            const chart = echarts.init(document.getElementById('knowledgeGraph')); 
+        // 初始化所有图表为空状态 
+        setEmptyChart(studentInfoChart, '学生基本信息');
+        setEmptyChart(titleInfoChart, '题目基本信息');
+        setEmptyChart(submitRecordChart, '答题行为日志');
+        setEmptyChart(knowledgeGraphChart, '知识点图结构');
+        setEmptyChart(subKnowledgeGraphChart, '从属知识点图结构');
+        setEmptyChart(timeAnalysisChart, '时间维度分析');
+        setEmptyChart(timeSeriesChart, '时间序列分析');
+        setEmptyChart(comprehensiveChart1, '综合分析');
+        setEmptyChart(comprehensiveChart2, '综合分析');
+        
+        // 文件上传处理函数 
+        const setupFileUpload = (inputId, filesContainerId, chartInstance, chartName, processor) => {
+            const fileInput = document.getElementById(inputId); 
+            const filesContainer = document.getElementById(filesContainerId); 
+            
+            fileInput.addEventListener('change',  (event) => {
+                filesContainer.innerHTML  = '';
+                
+                const files = event.target.files; 
+                if (!files || files.length  === 0) return;
+                
+                for (let i = 0; i < files.length;  i++) {
+                    const file = files[i];
+                    
+                    // 显示上传的文件信息 
+                    const fileItem = document.createElement('div'); 
+                    fileItem.className  = 'file-item';
+                    
+                    const fileIcon = document.createElement('i'); 
+                    fileIcon.className  = 'file-icon fas ' + 
+                        (file.name.endsWith('.csv')  ? 'fa-file-csv' : 
+                         file.name.endsWith('.txt')  ? 'fa-file-alt' : 'fa-file');
+                    
+                    const fileName = document.createElement('span'); 
+                    fileName.className  = 'file-name';
+                    fileName.textContent  = file.name; 
+                    
+                    const fileSize = document.createElement('span'); 
+                    fileSize.className  = 'file-size';
+                    fileSize.textContent  = (file.size  / 1024).toFixed(2) + ' KB';
+                    
+                    const fileRemove = document.createElement('i'); 
+                    fileRemove.className  = 'file-remove fas fa-times';
+                    fileRemove.addEventListener('click',  () => {
+                        fileItem.remove(); 
+                        setEmptyChart(chartInstance, chartName);
+                    });
+                    
+                    fileItem.appendChild(fileIcon); 
+                    fileItem.appendChild(fileName); 
+                    fileItem.appendChild(fileSize); 
+                    fileItem.appendChild(fileRemove); 
+                    filesContainer.appendChild(fileItem); 
+                    
+                    // 读取文件内容 
+                    const reader = new FileReader();
+                    reader.onload  = (e) => {
+                        const content = e.target.result; 
+                        processor(content, file.name,  chartInstance);
+                    };
+                    reader.readAsText(file); 
+                }
+            });
+        };
+        
+        // 处理学生基本信息CSV 
+        const processStudentInfo = (content, fileName, chartInstance) => {
+            // 这里应该有CSV解析和图表更新逻辑 
+            // 示例: 解析CSV并显示简单的柱状图 
+            const rows = content.split('\n').slice(1);  // 跳过标题行 
+            const majors = {};
+            
+            rows.forEach(row  => {
+                if (!row) return;
+                const cols = row.split(','); 
+                if (cols.length  >= 5) { // 确保有专业字段 
+                    const major = cols[4].trim();
+                    majors[major] = (majors[major] || 0) + 1;
+                }
+            });
+            
             const option = {
+                title: {
+                    text: '学生专业分布',
+                    left: 'center'
+                },
                 tooltip: {
                     trigger: 'item',
                     formatter: '{a} <br/>{b}: {c} ({d}%)'
                 },
                 legend: {
                     orient: 'vertical',
-                    right: 10,
-                    top: 'center',
-                    data: ['kk0', 'kk1', 'kk2', 'kk3', 'kk4', 'kk5', 'kk6', 'kk7']
+                    left: 'left',
+                    data: Object.keys(majors) 
                 },
                 series: [
                     {
-                        name: '知识点掌握',
+                        name: '专业分布',
                         type: 'pie',
-                        radius: ['50%', '70%'],
+                        radius: '50%',
+                        data: Object.entries(majors).map(([name,  value]) => ({value, name})),
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            };
+            
+            chartInstance.setOption(option); 
+        };
+        
+        // 处理题目基本信息CSV 
+        const processTitleInfo = (content, fileName, chartInstance) => {
+            const rows = content.split('\n').slice(1); 
+            const knowledgeMap = {};
+            
+            rows.forEach(row  => {
+                if (!row) return;
+                const cols = row.split(','); 
+                if (cols.length  >= 5) {
+                    const knowledge = cols[3].trim();
+                    const subKnowledge = cols[4].trim();
+                    
+                    if (knowledge) {
+                        knowledgeMap[knowledge] = knowledgeMap[knowledge] || {};
+                        if (subKnowledge) {
+                            knowledgeMap[knowledge][subKnowledge] = (knowledgeMap[knowledge][subKnowledge] || 0) + 1;
+                        }
+                    }
+                }
+            });
+            
+            const knowledgeCounts = Object.entries(knowledgeMap).map(([knowledge,  subs]) => {
+                return {
+                    name: knowledge,
+                    value: Object.values(subs).reduce((a,  b) => a + b, 0)
+                };
+            });
+            
+            knowledgeCounts.sort((a,  b) => b.value  - a.value); 
+            
+            const option = {
+                title: {
+                    text: '题目知识点分布',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: knowledgeCounts.map(item  => item.name), 
+                    axisLabel: {
+                        rotate: 45 
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '题目数量'
+                },
+                series: [
+                    {
+                        name: '题目数量',
+                        type: 'bar',
+                        data: knowledgeCounts.map(item  => item.value), 
+                        itemStyle: {
+                            color: function(params) {
+                                const colorList = ['#3498db', '#9b59b6', '#e74c3c', '#1abc9c', '#f39c12'];
+                                return colorList[params.dataIndex % colorList.length]; 
+                            }
+                        }
+                    }
+                ]
+            };
+            
+            chartInstance.setOption(option); 
+        };
+        
+        // 处理答题行为日志CSV 
+        const processSubmitRecord = (content, fileName, chartInstance) => {
+            // 这里应该有更复杂的日志分析逻辑 
+            // 示例: 简单的答题状态分布 
+            const rows = content.split('\n').slice(1); 
+            const stateCounts = {};
+            
+            rows.forEach(row  => {
+                if (!row) return;
+                const cols = row.split(','); 
+                if (cols.length  >= 5) {
+                    const state = cols[3].trim();
+                    stateCounts[state] = (stateCounts[state] || 0) + 1;
+                }
+            });
+            
+            const option = {
+                title: {
+                    text: '答题状态分布 - ' + fileName,
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} ({d}%)'
+                },
+                series: [
+                    {
+                        name: '答题状态',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
                         avoidLabelOverlap: false,
                         itemStyle: {
                             borderRadius: 10,
-                            borderColor: '#1a1a2e',
-                            borderWidth: 2
+                            borderColor: '#fff',
+                            borderWidth: 2 
                         },
                         label: {
                             show: false,
@@ -616,827 +718,250 @@
                             }
                         },
                         labelLine: {
-                            show: false
+                            show: false 
                         },
-                        data: [
-                            {value: 335, name: 'kk0', itemStyle: {color: '#3a86ff'}},
-                            {value: 310, name: 'kk1', itemStyle: {color: '#ffbe0b'}},
-                            {value: 234, name: 'kk2', itemStyle: {color: '#ef476f'}},
-                            {value: 135, name: 'kk3', itemStyle: {color: '#06d6a0'}},
-                            {value: 154, name: 'kk4', itemStyle: {color: '#8338ec'}},
-                            {value: 200, name: 'kk5', itemStyle: {color: '#ff006e'}},
-                            {value: 300, name: 'kk6', itemStyle: {color: '#3a86ff'}},
-                            {value: 250, name: 'kk7', itemStyle: {color: '#ffbe0b'}}
-                        ]
+                        data: Object.entries(stateCounts).map(([name,  value]) => ({value, name}))
                     }
                 ]
             };
-            chart.setOption(option); 
             
-            // 窗口大小变化时重新调整图表大小
-            window.addEventListener('resize',  function() {
-                chart.resize(); 
-            });
-        }
+            chartInstance.setOption(option); 
+        };
         
-        // 时间分析图表
-        function initTimeAnalysisChart() {
-            const chart = echarts.init(document.getElementById('timeAnalysisChart')); 
+        // 处理知识点图结构文本文件 
+        const processKnowledgeGraph = (content, fileName, chartInstance) => {
+            // 解析图结构数据 
+            const edges = [];
+            const lines = content.split('\n'); 
             
-            // 模拟数据
-            const dailyData = [
-                ['2023-08-31', 243],
-                ['2023-09-01', 285],
-                ['2023-09-02', 156],
-                ['2023-09-03', 112],
-                ['2023-09-04', 198],
-                ['2023-09-05', 245],
-                ['2023-09-06', 187],
-                ['2023-09-07', 210],
-                ['2023-09-08', 176],
-                ['2023-09-09', 132],
-                ['2023-09-10', 154],
-                ['2023-09-11', 223],
-                ['2023-09-12', 267],
-                ['2023-09-13', 189],
-                ['2023-09-14', 201]
-            ];
-            
-            const hourlyData = [
-                [0, 5205],
-                [1, 8287],
-                [2, 11453],
-                [3, 10142],
-                [4, 8765],
-                [5, 6543],
-                [6, 5432],
-                [7, 4321],
-                [8, 5678],
-                [9, 7890],
-                [10, 8765],
-                [11, 9876],
-                [12, 8765],
-                [13, 7654],
-                [14, 6543],
-                [15, 5432],
-                [16, 4321],
-                [17, 5678],
-                [18, 7890],
-                [19, 8765],
-                [20, 9876],
-                [21, 8765],
-                [22, 7654],
-                [23, 6543]
-            ];
-            
-            const monthlyData = [
-                [1, 4773],
-                [8, 243],
-                [9, 45409],
-                [10, 94362],
-                [11, 78067],
-                [12, 48683]
-            ];
-            
-            const option = {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'shadow'
-                    }
-                },
-                xAxis: {
-                    type: 'category',
-                    data: dailyData.map(item  => item[0]),
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '答题次数'
-                },
-                series: [{
-                    data: dailyData.map(item  => item[1]),
-                    type: 'bar',
-                    itemStyle: {
-                        color: function(params) {
-                            const colorList = ['#3a86ff', '#8338ec', '#ff006e', '#ffbe0b', '#06d6a0'];
-                            return colorList[params.dataIndex % colorList.length]; 
-                        }
-                    },
-                    showBackground: true,
-                    backgroundStyle: {
-                        color: 'rgba(180, 180, 180, 0.1)'
-                    }
-                }]
-            };
-            
-            chart.setOption(option); 
-            
-            // 存储图表实例和数据以便切换
-            chart.timeData  = {
-                daily: {
-                    xData: dailyData.map(item  => item[0]),
-                    yData: dailyData.map(item  => item[1]),
-                    type: 'bar'
-                },
-                hourly: {
-                    xData: hourlyData.map(item  => item[0] + ':00'),
-                    yData: hourlyData.map(item  => item[1]),
-                    type: 'line'
-                },
-                monthly: {
-                    xData: monthlyData.map(item  => {
-                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                        return months[item[0] - 1];
-                    }),
-                    yData: monthlyData.map(item  => item[1]),
-                    type: 'bar'
+            lines.forEach(line  => {
+                if (!line.trim())  return;
+                const [source, target] = line.trim().split(/\s+/); 
+                if (source && target) {
+                    edges.push({ 
+                        source: `节点${source}`,
+                        target: `节点${target}`
+                    });
                 }
-            };
-            
-            window.addEventListener('resize',  function() {
-                chart.resize(); 
-            });
-        }
-        
-        // 学生画像图表
-        function initStudentProfileChart() {
-            const chart = echarts.init(document.getElementById('studentProfileChart')); 
-            const option = {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'shadow'
-                    }
-                },
-                legend: {
-                    data: ['男', '女']
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'value'
-                },
-                yAxis: {
-                    type: 'category',
-                    data: ['计算机', '数学', '物理', '化学', '生物', '工程', '其他']
-                },
-                series: [
-                    {
-                        name: '男',
-                        type: 'bar',
-                        stack: 'total',
-                        label: {
-                            show: true
-                        },
-                        emphasis: {
-                            focus: 'series'
-                        },
-                        data: [120, 132, 101, 134, 90, 230, 210],
-                        itemStyle: {
-                            color: '#3a86ff'
-                        }
-                    },
-                    {
-                        name: '女',
-                        type: 'bar',
-                        stack: 'total',
-                        label: {
-                            show: true
-                        },
-                        emphasis: {
-                            focus: 'series'
-                        },
-                        data: [220, 182, 191, 234, 290, 330, 310],
-                        itemStyle: {
-                            color: '#ff006e'
-                        }
-                    }
-                ]
-            };
-            chart.setOption(option); 
-            
-            window.addEventListener('resize',  function() {
-                chart.resize(); 
-            });
-        }
-        
-        // 题目分析图表
-        function initQuestionAnalysisChart() {
-            const chart = echarts.init(document.getElementById('questionAnalysisChart')); 
-            const option = {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross',
-                        crossStyle: {
-                            color: '#999'
-                        }
-                    }
-                },
-                legend: {
-                    data: ['正确率', '平均用时']
-                },
-                xAxis: [
-                    {
-                        type: 'category',
-                        data: ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8'],
-                        axisPointer: {
-                            type: 'shadow'
-                        }
-                    }
-                ],
-                yAxis: [
-                    {
-                        type: 'value',
-                        name: '正确率',
-                        min: 0,
-                        max: 1,
-                        axisLabel: {
-                            formatter: '{value}'
-                        }
-                    },
-                    {
-                        type: 'value',
-                        name: '用时(ms)',
-                        min: 0,
-                        max: 100,
-                        axisLabel: {
-                            formatter: '{value}'
-                        }
-                    }
-                ],
-                series: [
-                    {
-                        name: '正确率',
-                        type: 'bar',
-                        data: [0.6, 0.7, 0.8, 0.5, 0.4, 0.9, 0.7, 0.6],
-                        itemStyle: {
-                            color: '#06d6a0'
-                        }
-                    },
-                    {
-                        name: '平均用时',
-                        type: 'line',
-                        yAxisIndex: 1,
-                        data: [30, 45, 60, 25, 75, 40, 50, 35],
-                        itemStyle: {
-                            color: '#ffbe0b'
-                        }
-                    }
-                ]
-            };
-            chart.setOption(option); 
-            
-            window.addEventListener('resize',  function() {
-                chart.resize(); 
-            });
-        }
-        
-        // 学习模式图表
-        function initLearningPatternChart() {
-            const chart = echarts.init(document.getElementById('learningPatternChart')); 
-            const option = {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross',
-                        label: {
-                            backgroundColor: '#6a7985'
-                        }
-                    }
-                },
-                legend: {
-                    data: ['高效学习者', '中等学习者', '低效学习者']
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis: [
-                    {
-                        type: 'category',
-                        boundaryGap: false,
-                        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-                    }
-                ],
-                yAxis: [
-                    {
-                        type: 'value',
-                        name: '知识点掌握度'
-                    }
-                ],
-                series: [
-                    {
-                        name: '高效学习者',
-                        type: 'line',
-                        stack: '总量',
-                        areaStyle: {},
-                        emphasis: {
-                            focus: 'series'
-                        },
-                        data: [120, 132, 101, 134, 90, 230, 210],
-                        itemStyle: {
-                            color: '#3a86ff'
-                        },
-                        smooth: true
-                    },
-                    {
-                        name: '中等学习者',
-                        type: 'line',
-                        stack: '总量',
-                        areaStyle: {},
-                        emphasis: {
-                            focus: 'series'
-                        },
-                        data: [220, 182, 191, 234, 290, 330, 310],
-                        itemStyle: {
-                            color: '#ffbe0b'
-                        },
-                        smooth: true
-                    },
-                    {
-                        name: '低效学习者',
-                        type: 'line',
-                        stack: '总量',
-                        areaStyle: {},
-                        emphasis: {
-                            focus: 'series'
-                        },
-                        data: [150, 232, 201, 154, 190, 330, 410],
-                        itemStyle: {
-                            color: '#ef476f'
-                        },
-                        smooth: true
-                    }
-                ]
-            };
-            chart.setOption(option); 
-            
-            window.addEventListener('resize',  function() {
-                chart.resize(); 
-            });
-        }
-        
-        // 难度匹配图表
-        function initDifficultyMatchingChart() {
-            const chart = echarts.init(document.getElementById('difficultyMatchingChart')); 
-            const option = {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross',
-                        crossStyle: {
-                            color: '#999'
-                        }
-                    },
-                    formatter: function(params) {
-                        return `题目: ${params[0].name}<br/>
-                                知识点掌握度: ${params[0].value[1]}<br/>
-                                正确率: ${params[0].value[2]}`;
-                    }
-                },
-                legend: {
-                    data: ['匹配良好', '难度过高', '难度过低']
-                },
-                xAxis: {
-                    type: 'value',
-                    name: '知识点掌握度'
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '正确率'
-                },
-                series: [
-                    {
-                        name: '匹配良好',
-                        type: 'scatter',
-                        symbolSize: function(data) {
-                            return Math.sqrt(data[3])  * 5;
-                        },
-                        data: [
-                            [0.7, 0.65, 'Q1', 100],
-                            [0.8, 0.75, 'Q2', 120],
-                            [0.6, 0.55, 'Q3', 80],
-                            [0.75, 0.7, 'Q4', 90],
-                            [0.85, 0.8, 'Q5', 110]
-                        ],
-                        itemStyle: {
-                            color: '#06d6a0'
-                        }
-                    },
-                    {
-                        name: '难度过高',
-                        type: 'scatter',
-                        symbolSize: function(data) {
-                            return Math.sqrt(data[3])  * 5;
-                        },
-                        data: [
-                            [0.8, 0.3, 'Q6', 70],
-                            [0.9, 0.4, 'Q7', 60],
-                            [0.7, 0.2, 'Q8', 50]
-                        ],
-                        itemStyle: {
-                            color: '#ef476f'
-                        }
-                    },
-                    {
-                        name: '难度过低',
-                        type: 'scatter',
-                        symbolSize: function(data) {
-                            return Math.sqrt(data[3])  * 5;
-                        },
-                        data: [
-                            [0.4, 0.9, 'Q9', 90],
-                            [0.3, 0.85, 'Q10', 80],
-                            [0.5, 0.95, 'Q11', 100]
-                        ],
-                        itemStyle: {
-                            color: '#ffbe0b'
-                        }
-                    }
-                ]
-            };
-            chart.setOption(option); 
-            
-            // 填充表格数据
-            const tableBody = document.getElementById('difficultyTableBody'); 
-            const data = [
-                {id: 'Q1', mastery: 0.7, correctRate: 0.65, status: '匹配良好'},
-                {id: 'Q2', mastery: 0.8, correctRate: 0.75, status: '匹配良好'},
-                {id: 'Q3', mastery: 0.6, correctRate: 0.55, status: '匹配良好'},
-                {id: 'Q6', mastery: 0.8, correctRate: 0.3, status: '难度过高'},
-                {id: 'Q7', mastery: 0.9, correctRate: 0.4, status: '难度过高'},
-                {id: 'Q9', mastery: 0.4, correctRate: 0.9, status: '难度过低'},
-                {id: 'Q10', mastery: 0.3, correctRate: 0.85, status: '难度过低'}
-            ];
-            
-            data.forEach(item  => {
-                const row = document.createElement('tr'); 
-                row.innerHTML  = `
-                    <td>${item.id}</td> 
-                    <td>${item.mastery.toFixed(2)}</td> 
-                    <td>${item.correctRate.toFixed(2)}</td> 
-                    <td>${item.status}</td> 
-                `;
-                tableBody.appendChild(row); 
             });
             
-            window.addEventListener('resize',  function() {
-                chart.resize(); 
+            // 提取所有节点 
+            const nodesMap = {};
+            edges.forEach(edge  => {
+                nodesMap[edge.source] = 1;
+                nodesMap[edge.target] = 1;
             });
-        }
-        
-        // 知识点关系网络图
-        function initKnowledgeNetworkChart() {
-            const chart = echarts.init(document.getElementById('knowledgeNetworkChart')); 
             
-            // 模拟数据
-            const categories = [
-                {name: '知识点kk0'},
-                {name: '知识点kk1'},
-                {name: '知识点kk2'},
-                {name: '知识点kk3'},
-                {name: '知识点kk4'},
-                {name: '知识点kk5'},
-                {name: '知识点kk6'},
-                {name: '知识点kk7'}
-            ];
-            
-            const nodes = [
-                {id: '0', name: 'k0', category: 0, symbolSize: 30},
-                {id: '1', name: 'k1', category: 0, symbolSize: 20},
-                {id: '2', name: 'k2', category: 1, symbolSize: 20},
-                {id: '3', name: 'k3', category: 1, symbolSize: 30},
-                {id: '4', name: 'k4', category: 2, symbolSize: 25},
-                {id: '5', name: 'k5', category: 2, symbolSize: 20},
-                {id: '6', name: 'k6', category: 3, symbolSize: 20},
-                {id: '7', name: 'k7', category: 3, symbolSize: 25},
-                {id: '8', name: 'k8', category: 4, symbolSize: 20},
-                {id: '9', name: 'k9', category: 4, symbolSize: 30},
-                {id: '10', name: 'k10', category: 5, symbolSize: 20},
-                {id: '11', name: 'k11', category: 5, symbolSize: 25},
-                {id: '12', name: 'k12', category: 6, symbolSize: 20},
-                {id: '13', name: 'k13', category: 6, symbolSize: 30},
-                {id: '14', name: 'k14', category: 7, symbolSize: 20}
-            ];
-            
-            const links = [
-                {source: '0', target: '1'},
-                {source: '0', target: '2'},
-                {source: '1', target: '3'},
-                {source: '2', target: '4'},
-                {source: '3', target: '5'},
-                {source: '4', target: '6'},
-                {source: '5', target: '7'},
-                {source: '6', target: '8'},
-                {source: '7', target: '9'},
-                {source: '8', target: '10'},
-                {source: '9', target: '11'},
-                {source: '10', target: '12'},
-                {source: '11', target: '13'},
-                {source: '12', target: '14'}
-            ];
+            const nodes = Object.keys(nodesMap).map(name  => ({name}));
             
             const option = {
                 title: {
-                    text: '知识点关系网络',
-                    top: 'top',
+                    text: '知识点图结构 - ' + fileName,
                     left: 'center'
                 },
                 tooltip: {},
-                legend: {
-                    data: categories.map(function  (a) {
-                        return a.name; 
-                    }),
-                    top: 'bottom'
-                },
+                animationDurationUpdate: 1500,
+                animationEasingUpdate: 'quinticInOut',
                 series: [
                     {
-                        name: '知识点关系',
                         type: 'graph',
                         layout: 'force',
-                        data: nodes,
-                        links: links,
-                        categories: categories,
-                        roam: true,
-                        label: {
-                            show: true,
-                            position: 'right'
-                        },
                         force: {
                             repulsion: 100,
-                            edgeLength: [50, 100]
+                            edgeLength: 100 
                         },
-                        emphasis: {
-                            focus: 'adjacency',
-                            lineStyle: {
-                                width: 10
-                            }
+                        roam: true,
+                        draggable: true,
+                        data: nodes,
+                        links: edges,
+                        categories: [{name: '知识点'}],
+                        focusNodeAdjacency: true,
+                        itemStyle: {
+                            borderColor: '#fff',
+                            borderWidth: 1,
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(0, 0, 0, 0.3)'
                         },
                         lineStyle: {
                             opacity: 0.9,
                             width: 2,
-                            curveness: 0
+                            curveness: 0.3 
+                        },
+                        emphasis: {
+                            lineStyle: {
+                                width: 4 
+                            }
                         }
                     }
                 ]
             };
             
-            chart.setOption(option); 
-            
-            window.addEventListener('resize',  function() {
-                chart.resize(); 
-            });
-        }
+            chartInstance.setOption(option); 
+        };
         
-        // 切换时间分析图表
-        function switchTimeChart(type) {
-            const chart = echarts.getInstanceByDom(document.getElementById('timeAnalysisChart')); 
-            const option = chart.getOption(); 
+        // 处理时间维度分析CSV 
+        const processTimeAnalysis = (content, fileName, chartInstance) => {
+            const rows = content.split('\n').slice(1); 
+            const data = [];
             
-            // 更新选项卡状态
-            document.querySelectorAll('#timeAnalysisChart  ~ .tabs .tab').forEach(tab => {
-                tab.classList.remove('active'); 
-            });
-            event.target.classList.add('active'); 
-            
-            // 更新图表数据
-            option.xAxis[0].data = chart.timeData[type].xData; 
-            option.series[0].data  = chart.timeData[type].yData; 
-            option.series[0].type  = chart.timeData[type].type; 
-            
-            chart.setOption(option); 
-        }
-        
-        // 切换数据选项卡
-        function switchTab(tabId) {
-            // 更新选项卡状态
-            document.querySelectorAll(`#${event.target.parentNode.id}  ~ .tab-content`).forEach(tab => {
-                tab.classList.remove('active'); 
-            });
-            document.querySelectorAll(`#${event.target.parentNode.id}  .tab`).forEach(tab => {
-                tab.classList.remove('active'); 
+            rows.forEach(row  => {
+                if (!row.trim())  return;
+                const [date, count] = row.split(','); 
+                if (date && count) {
+                    data.push({ 
+                        date: date.trim(), 
+                        count: parseFloat(count.trim()) 
+                    });
+                }
             });
             
-            event.target.classList.add('active'); 
-            document.getElementById(tabId).classList.add('active'); 
-        }
-        
-        // 文件上传处理
-        document.getElementById('fileInput').addEventListener('change',  handleFileUpload);
-        const uploadBox = document.getElementById('uploadBox'); 
-        
-        // 拖放功能
-        uploadBox.addEventListener('dragover',  (e) => {
-            e.preventDefault(); 
-            uploadBox.style.borderColor  = 'var(--primary)';
-            uploadBox.style.background  = 'rgba(58, 134, 255, 0.1)';
-        });
-        
-        uploadBox.addEventListener('dragleave',  () => {
-            uploadBox.style.borderColor  = 'rgba(255, 255, 255, 0.2)';
-            uploadBox.style.background  = 'transparent';
-        });
-        
-        uploadBox.addEventListener('drop',  (e) => {
-            e.preventDefault(); 
-            uploadBox.style.borderColor  = 'rgba(255, 255, 255, 0.2)';
-            uploadBox.style.background  = 'transparent';
+            const isDaily = fileName.includes('daily'); 
+            const isHourly = fileName.includes('hourly'); 
+            const isMonthly = fileName.includes('monthly'); 
             
-            if (e.dataTransfer.files.length)  {
-                handleFileUpload({target: {files: e.dataTransfer.files}}); 
-            }
-        });
-        
-        // 处理文件上传
-        function handleFileUpload(event) {
-            const files = event.target.files; 
-            const uploadStatus = document.getElementById('uploadStatus'); 
+            let xAxisName = '日期';
+            if (isHourly) xAxisName = '小时';
+            if (isMonthly) xAxisName = '月份';
             
-            if (!files.length)  return;
-            
-            uploadStatus.innerHTML  = '<p>正在处理文件...</p>';
-            
-            Array.from(files).forEach(file  => {
-                const reader = new FileReader();
-                
-                reader.onload  = function(e) {
-                    try {
-                        const content = e.target.result; 
-                        const fileName = file.name.toLowerCase(); 
-                        
-                        // 使用PapaParse解析CSV文件
-                        Papa.parse(content,  {
-                            header: true,
-                            complete: function(results) {
-                                if (fileName.includes('studentinfo'))  {
-                                    studentData = results.data; 
-                                    updateStudentStats();
-                                    previewData('studentInfoPreview', studentData.slice(0,  5));
-                                    uploadStatus.innerHTML  += `<p>成功导入学生数据: ${studentData.length}  条记录</p>`;
-                                } else if (fileName.includes('titleinfo'))  {
-                                    titleData = results.data; 
-                                    previewData('titleInfoPreview', titleData.slice(0,  5));
-                                    uploadStatus.innerHTML  += `<p>成功导入题目数据: ${titleData.length}  条记录</p>`;
-                                } else if (fileName.includes('submitrecord'))  {
-                                    submitData = submitData.concat(results.data); 
-                                    previewData('submitRecordPreview', submitData.slice(0,  5));
-                                    uploadStatus.innerHTML  += `<p>成功导入答题记录: ${results.data.length}  条记录 (累计 ${submitData.length}  条)</p>`;
-                                } else {
-                                    uploadStatus.innerHTML  += `<p>无法识别的文件: ${file.name}</p>`; 
-                                }
-                                
-                                // 如果所有数据都已加载，开始处理
-                                if (studentData.length  && titleData.length  && submitData.length)  {
-                                    processData();
-                                }
-                            },
-                            error: function(error) {
-                                uploadStatus.innerHTML  += `<p>解析错误: ${file.name}  - ${error.message}</p>`; 
-                            }
-                        });
-                    } catch (error) {
-                        uploadStatus.innerHTML  += `<p>处理错误: ${file.name}  - ${error.message}</p>`; 
+            const option = {
+                title: {
+                    text: (isDaily ? '每日' : isHourly ? '每小时' : '每月') + '答题统计 - ' + fileName,
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
                     }
-                };
-                
-                reader.onerror  = function() {
-                    uploadStatus.innerHTML  += `<p>读取错误: ${file.name}</p>`; 
-                };
-                
-                reader.readAsText(file); 
-            });
-        }
-        
-        // 更新学生统计信息
-        function updateStudentStats() {
-            if (!studentData.length)  return;
-            
-            // 计算总学生数
-            document.getElementById('totalStudents').textContent  = studentData.length; 
-            
-            // 计算平均年龄
-            const totalAge = studentData.reduce((sum,  student) => sum + parseInt(student.age  || 0), 0);
-            const avgAge = totalAge / studentData.length; 
-            document.getElementById('avgAge').textContent  = avgAge.toFixed(1); 
-            
-            // 计算性别比例
-            const maleCount = studentData.filter(student  => student.sex  === '男').length;
-            const femaleCount = studentData.filter(student  => student.sex  === '女').length;
-            document.getElementById('genderRatio').textContent  = `${maleCount}:${femaleCount}`;
-            
-            // 计算专业数量
-            const majors = new Set(studentData.map(student  => student.major)); 
-            document.getElementById('majorCount').textContent  = majors.size; 
-        }
-        
-        // 预览数据
-        function previewData(elementId, data) {
-            const container = document.getElementById(elementId); 
-            
-            if (!data || !data.length)  {
-                container.innerHTML  = '<p>没有数据可显示</p>';
-                return;
-            }
-            
-            const table = document.createElement('table'); 
-            table.className  = 'data-table';
-            
-            // 创建表头
-            const thead = document.createElement('thead'); 
-            const headerRow = document.createElement('tr'); 
-            
-            Object.keys(data[0]).forEach(key  => {
-                const th = document.createElement('th'); 
-                th.textContent  = key;
-                headerRow.appendChild(th); 
-            });
-            
-            thead.appendChild(headerRow); 
-            table.appendChild(thead); 
-            
-            // 创建表体
-            const tbody = document.createElement('tbody'); 
-            
-            data.forEach(row  => {
-                const tr = document.createElement('tr'); 
-                
-                Object.values(row).forEach(value  => {
-                    const td = document.createElement('td'); 
-                    td.textContent  = value;
-                    tr.appendChild(td); 
-                });
-                
-                tbody.appendChild(tr); 
-            });
-            
-            table.appendChild(tbody); 
-            container.innerHTML  = '';
-            container.appendChild(table); 
-        }
-        
-        // 处理数据
-        function processData() {
-            if (!studentData.length  || !titleData.length  || !submitData.length)  {
-                console.log(' 数据不完整，无法处理');
-                return;
-            }
-            
-            // 这里可以添加更复杂的数据处理逻辑
-            processedData = {
-                students: studentData,
-                titles: titleData,
-                submissions: submitData
+                },
+                xAxis: {
+                    type: 'category',
+                    name: xAxisName,
+                    data: data.map(item  => item.date), 
+                    axisLabel: {
+                        rotate: isDaily ? 45 : 0 
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '答题数量'
+                },
+                series: [
+                    {
+                        name: '答题数量',
+                        type: 'line',
+                        smooth: true,
+                        data: data.map(item  => item.count), 
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0,  0, 0, 1, [
+                                { offset: 0, color: 'rgba(58, 77, 233, 0.8)' },
+                                { offset: 1, color: 'rgba(58, 77, 233, 0.1)' }
+                            ])
+                        },
+                        itemStyle: {
+                            color: '#3a4de9'
+                        }
+                    }
+                ]
             };
             
-            console.log(' 数据处理完成', processedData);
-            
-            // 更新所有图表
-            updateAllCharts();
-        }
+            chartInstance.setOption(option); 
+        };
         
-        // 更新所有图表
-        function updateAllCharts() {
-            // 在实际应用中，这里会根据处理后的数据更新图表
-            // 现在只是模拟更新
-            console.log(' 更新所有图表');
-        }
-        
-        // 初始化页面
-        document.addEventListener('DOMContentLoaded',  function() {
-            initCharts();
+        // 处理时间序列分析CSV 
+        const processTimeSeries = (content, fileName, chartInstance) => {
+            const rows = content.split('\n').slice(1); 
+            const data = [];
             
-            // 填充题目表格
-            const questionTableBody = document.getElementById('questionTableBody'); 
-            const questions = [
-                {id: 'Question_3MwAFlmNO8EKrpY5zjUd', correctRate: 0.15, avgTime: 3.78},
-                {id: 'Question_3oPyUzDmQtcMfLpGZ0jW', correctRate: 0.16, avgTime: 3.82},
-                {id: 'Question_4nHcauCQ0Y6Pm8DgKlLo', correctRate: 0.25, avgTime: 8.76},
-                {id: 'Question_5fgqjSBwTPG7KUV3it6O', correctRate: 0.14, avgTime: 69.40},
-                {id: 'Question_6hjKlMnOpQrStUvWxYzA', correctRate: 0.32, avgTime: 12.45},
-                {id: 'Question_7bcDefGhiJklMnoPqRsT', correctRate: 0.28, avgTime: 7.89},
-                {id: 'Question_8uvWxYzAbCdEfGhIjKlM', correctRate: 0.19, avgTime: 15.67},
-                {id: 'Question_9nOpQrStUvWxYzAbCdEf', correctRate: 0.22, avgTime: 9.34}
-            ];
-            
-            questions.forEach(q  => {
-                const row = document.createElement('tr'); 
-                row.innerHTML  = `
-                    <td>${q.id}</td> 
-                    <td>${q.correctRate.toFixed(2)}</td> 
-                    <td>${q.avgTime.toFixed(2)}</td> 
-                `;
-                questionTableBody.appendChild(row); 
+            rows.forEach(row  => {
+                if (!row.trim())  return;
+                const cols = row.split(','); 
+                if (cols.length  >= 5) {
+                    data.push({ 
+                        titleId: cols[0].trim(),
+                        correctRate: parseFloat(cols[1].trim()),
+                        timeConsume: parseFloat(cols[2].trim()),
+                        hour: parseInt(cols[3].trim()),
+                        month: parseInt(cols[4].trim())
+                    });
+                }
             });
+            
+            const option = {
+                title: {
+                    text: '题目正确率与用时关系',
+                    left: 'center'
+                },
+                tooltip: {
+                    formatter: function(params) {
+                        return `题目: ${params.data[4]}<br/> 
+                                正确率: ${(params.data[1]*100).toFixed(2)}%<br/> 
+                                平均用时: ${params.data[2].toFixed(2)}ms<br/> 
+                                月份: ${params.data[3]}`; 
+                    }
+                },
+                xAxis: {
+                    name: '正确率',
+                    min: 0,
+                    max: 1 
+                },
+                yAxis: {
+                    name: '平均用时(ms)',
+                    min: 0 
+                },
+                visualMap: {
+                    min: 0,
+                    max: 1,
+                    dimension: 1,
+                    inRange: {
+                        color: ['#d94e5d', '#eac736', '#50a3ba']
+                    }
+                },
+                series: [
+                    {
+                        type: 'scatter',
+                        symbolSize: function(data) {
+                            return Math.sqrt(data[2])  * 5;
+                        },
+                        data: data.map(item  => [
+                            item.correctRate, 
+                            item.timeConsume, 
+                            item.timeConsume, 
+                            item.month, 
+                            item.titleId  
+                        ]),
+                        itemStyle: {
+                            opacity: 0.8 
+                        }
+                    }
+                ]
+            };
+            
+            chartInstance.setOption(option); 
+        };
+        
+        // 设置所有文件上传处理 
+        setupFileUpload('studentInfoFile', 'studentInfoFiles', studentInfoChart, '学生基本信息', processStudentInfo);
+        setupFileUpload('titleInfoFile', 'titleInfoFiles', titleInfoChart, '题目基本信息', processTitleInfo);
+        setupFileUpload('submitRecordFiles', 'submitRecordFilesList', submitRecordChart, '答题行为日志', processSubmitRecord);
+        setupFileUpload('knowledgeGraphFiles', 'knowledgeGraphFilesList', knowledgeGraphChart, '知识点图结构', processKnowledgeGraph);
+        setupFileUpload('subKnowledgeGraphFiles', 'subKnowledgeGraphFilesList', subKnowledgeGraphChart, '从属知识点图结构', processKnowledgeGraph);
+        setupFileUpload('dailyAnswerFile', 'dailyAnswerFiles', timeAnalysisChart, '每日答题统计', (content, fileName) => processTimeAnalysis(content, fileName, timeAnalysisChart));
+        setupFileUpload('hourlyAnswerFile', 'hourlyAnswerFiles', timeAnalysisChart, '每小时答题统计', (content, fileName) => processTimeAnalysis(content, fileName, timeAnalysisChart));
+        setupFileUpload('monthlyAnswerFile', 'monthlyAnswerFiles', timeAnalysisChart, '每月答题统计', (content, fileName) => processTimeAnalysis(content, fileName, timeAnalysisChart));
+        setupFileUpload('timeSeriesFile', 'timeSeriesFiles', timeSeriesChart, '时间序列分析', processTimeSeries);
+        
+        // 窗口大小变化时重新调整图表大小 
+        window.addEventListener('resize',  function() {
+            studentInfoChart.resize(); 
+            titleInfoChart.resize(); 
+            submitRecordChart.resize(); 
+            knowledgeGraphChart.resize(); 
+            subKnowledgeGraphChart.resize(); 
+            timeAnalysisChart.resize(); 
+            timeSeriesChart.resize(); 
+            comprehensiveChart1.resize(); 
+            comprehensiveChart2.resize(); 
         });
     </script>
 </body>
