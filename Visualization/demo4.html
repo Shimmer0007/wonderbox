@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习行为分析可视化大屏</title>
+    <link href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-100-M/font-awesome/6.0.0/css/all.min.css"  rel="stylesheet">
+    <link href="https://s2.ssl.qhres2.com/static/56662140ef7d5d03.css"  rel="stylesheet">
+    <script src="https://s2.ssl.qhres2.com/!2dd0bbf7/echats.js"></script> 
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --bg-darker: #0a0a0a;
+            --bg-panel: #1e1e1e;
+            --accent-primary: #3a86ff;
+            --accent-secondary: #8338ec;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+ 
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+ 
+        .container {
+            max-width: 100%;
+            padding: 1rem;
+        }
+ 
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: var(--bg-darker);
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+ 
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+ 
+        .upload-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+ 
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+        }
+ 
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+ 
+        .panel {
+            background-color: var(--bg-panel);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+        }
+ 
+        .panel:hover {
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+ 
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.75rem;
+        }
+ 
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+ 
+        .panel-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+ 
+        .chart-container {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+ 
+        .file-upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            background-color: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 1rem;
+        }
+ 
+        .file-upload-container:hover {
+            border-color: var(--accent-primary);
+            background-color: rgba(58, 134, 255, 0.1);
+        }
+ 
+        .file-upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent-primary);
+        }
+ 
+        .file-upload-text {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+ 
+        .file-input {
+            display: none;
+        }
+ 
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+ 
+        .data-table th, .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+ 
+        .data-table th {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+ 
+        .data-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+ 
+        .knowledge-graph {
+            width: 100%;
+            height: 400px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: var(--border-radius);
+        }
+ 
+        .grid-col-4 {
+            grid-column: span 4;
+        }
+ 
+        .grid-col-6 {
+            grid-column: span 6;
+        }
+ 
+        .grid-col-8 {
+            grid-column: span 8;
+        }
+ 
+        .grid-col-12 {
+            grid-column: span 12;
+        }
+ 
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+ 
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+ 
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+ 
+        .panel {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+ 
+        .panel:nth-child(1) { animation-delay: 0.1s; }
+        .panel:nth-child(2) { animation-delay: 0.2s; }
+        .panel:nth-child(3) { animation-delay: 0.3s; }
+        .panel:nth-child(4) { animation-delay: 0.4s; }
+        .panel:nth-child(5) { animation-delay: 0.5s; }
+        .panel:nth-child(6) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="header-title">Learning Behavior Analytics Dashboard</h1>
+            <button class="upload-btn" id="uploadAllBtn">
+                <i class="fas fa-cloud-upload-alt"></i> 批量上传数据 
+            </button>
+        </header>
+ 
+        <div class="dashboard">
+            <!-- 学生基本信息面板 -->
+            <div class="panel grid-col-4">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">学习者基本信息</h3>
+                        <p class="panel-subtitle">Data_StudentInfo.csv</p> 
+                    </div>
+                    <button class="upload-btn" style="padding: 0.5rem 1rem;" onclick="document.getElementById('studentInfoFile').click()"> 
+                        <i class="fas fa-upload"></i>
+                    </button>
+                </div>
+                <input type="file" id="studentInfoFile" class="file-input" accept=".csv">
+                <div class="file-upload-container" id="studentInfoUpload">
+                    <i class="fas fa-user-graduate file-upload-icon"></i>
+                    <div class="file-upload-text">
+                        <p>拖放文件到此处或点击上传</p>
+                        <p class="panel-subtitle">支持CSV格式的学习者基本信息</p>
+                    </div>
+                </div>
+                <div class="chart-container" id="studentInfoChart"></div>
+            </div>
+ 
+            <!-- 题目基本信息面板 -->
+            <div class="panel grid-col-4">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">题目基本信息</h3>
+                        <p class="panel-subtitle">Data_TitleInfo.csv</p> 
+                    </div>
+                    <button class="upload-btn" style="padding: 0.5rem 1rem;" onclick="document.getElementById('titleInfoFile').click()"> 
+                        <i class="fas fa-upload"></i>
+                    </button>
+                </div>
+                <input type="file" id="titleInfoFile" class="file-input" accept=".csv">
+                <div class="file-upload-container" id="titleInfoUpload">
+                    <i class="fas fa-question-circle file-upload-icon"></i>
+                    <div class="file-upload-text">
+                        <p>拖放文件到此处或点击上传</p>
+                        <p class="panel-subtitle">支持CSV格式的题目基本信息</p>
+                    </div>
+                </div>
+                <div class="chart-container" id="titleInfoChart"></div>
+            </div>
+ 
+            <!-- 答题记录面板 -->
+            <div class="panel grid-col-4">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">答题行为日志</h3>
+                        <p class="panel-subtitle">SubmitRecord-Class*.csv</p>
+                    </div>
+                    <button class="upload-btn" style="padding: 0.5rem 1rem;" onclick="document.getElementById('submitRecordFile').click()"> 
+                        <i class="fas fa-upload"></i>
+                    </button>
+                </div>
+                <input type="file" id="submitRecordFile" class="file-input" accept=".csv" multiple>
+                <div class="file-upload-container" id="submitRecordUpload">
+                    <i class="fas fa-clipboard-list file-upload-icon"></i>
+                    <div class="file-upload-text">
+                        <p>拖放文件到此处或点击上传</p>
+                        <p class="panel-subtitle">支持多个班级的答题日志文件</p>
+                    </div>
+                </div>
+                <div class="chart-container" id="submitRecordChart"></div>
+            </div>
+ 
+            <!-- 知识点图谱面板 -->
+            <div class="panel grid-col-6">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">知识点图谱分析</h3>
+                        <p class="panel-subtitle">vis_graph_kk*.txt / vis_graph_k*.txt</p>
+                    </div>
+                    <button class="upload-btn" style="padding: 0.5rem 1rem;" onclick="document.getElementById('knowledgeGraphFile').click()"> 
+                        <i class="fas fa-upload"></i>
+                    </button>
+                </div>
+                <input type="file" id="knowledgeGraphFile" class="file-input" accept=".txt" multiple>
+                <div class="file-upload-container" id="knowledgeGraphUpload">
+                    <i class="fas fa-project-diagram file-upload-icon"></i>
+                    <div class="file-upload-text">
+                        <p>拖放文件到此处或点击上传</p>
+                        <p class="panel-subtitle">支持知识点图谱文件(可多选)</p>
+                    </div>
+                </div>
+                <div class="knowledge-graph" id="knowledgeGraph"></div>
+            </div>
+ 
+            <!-- 时间序列分析面板 -->
+            <div class="panel grid-col-6">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">时间序列分析</h3>
+                        <p class="panel-subtitle">daily/hourly/monthly_answer_count.csv</p> 
+                    </div>
+                    <button class="upload-btn" style="padding: 0.5rem 1rem;" onclick="document.getElementById('timeSeriesFile').click()"> 
+                        <i class="fas fa-upload"></i>
+                    </button>
+                </div>
+                <input type="file" id="timeSeriesFile" class="file-input" accept=".csv" multiple>
+                <div class="file-upload-container" id="timeSeriesUpload">
+                    <i class="fas fa-clock file-upload-icon"></i>
+                    <div class="file-upload-text">
+                        <p>拖放文件到此处或点击上传</p>
+                        <p class="panel-subtitle">支持按日/小时/月统计的答题记录</p>
+                    </div>
+                </div>
+                <div class="chart-container" id="timeSeriesChart"></div>
+            </div>
+ 
+            <!-- 学习模式分析面板 -->
+            <div class="panel grid-col-6">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">学习模式分析</h3>
+                        <p class="panel-subtitle">time_series_analysis.csv</p> 
+                    </div>
+                    <button class="upload-btn" style="padding: 0.5rem 1rem;" onclick="document.getElementById('learningPatternFile').click()"> 
+                        <i class="fas fa-upload"></i>
+                    </button>
+                </div>
+                <input type="file" id="learningPatternFile" class="file-input" accept=".csv">
+                <div class="file-upload-container" id="learningPatternUpload">
+                    <i class="fas fa-brain file-upload-icon"></i>
+                    <div class="file-upload-text">
+                        <p>拖放文件到此处或点击上传</p>
+                        <p class="panel-subtitle">支持时间序列分析数据</p>
+                    </div>
+                </div>
+                <div class="chart-container" id="learningPatternChart"></div>
+            </div>
+ 
+            <!-- 题目难度分析面板 -->
+            <div class="panel grid-col-6">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">题目难度匹配分析</h3>
+                        <p class="panel-subtitle">综合数据分析</p>
+                    </div>
+                    <button class="upload-btn" style="padding: 0.5rem 1rem;" id="analyzeBtn">
+                        <i class="fas fa-chart-bar"></i> 开始分析 
+                    </button>
+                </div>
+                <div class="chart-container" id="difficultyAnalysisChart"></div>
+            </div>
+        </div>
+    </div>
+ 
+    <script>
+        // 初始化所有图表 
+        document.addEventListener('DOMContentLoaded',  function() {
+            // 设置Echarts主题 
+            echarts.registerTheme('dark',  {
+                backgroundColor: 'transparent',
+                color: [
+                    '#3a86ff', '#8338ec', '#ff006e', '#fb5607', '#ffbe0b',
+                    '#3a86ff', '#8338ec', '#ff006e', '#fb5607', '#ffbe0b'
+                ],
+                textStyle: {
+                    color: '#e0e0e0'
+                },
+                title: {
+                    textStyle: {
+                        color: '#ffffff'
+                    },
+                    subtextStyle: {
+                        color: '#a0a0a0'
+                    }
+                },
+                legend: {
+                    textStyle: {
+                        color: '#e0e0e0'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(30, 30, 30, 0.9)',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    textStyle: {
+                        color: '#e0e0e0'
+                    }
+                }
+            });
+ 
+            // 初始化空图表 
+            initEmptyChart('studentInfoChart', '学习者基本信息分布');
+            initEmptyChart('titleInfoChart', '题目基本信息分析');
+            initEmptyChart('submitRecordChart', '答题行为日志分析');
+            initEmptyChart('timeSeriesChart', '时间序列分析');
+            initEmptyChart('learningPatternChart', '学习模式分析');
+            initEmptyChart('difficultyAnalysisChart', '题目难度匹配分析');
+ 
+            // 初始化知识图谱 
+            const knowledgeGraph = echarts.init(document.getElementById('knowledgeGraph'),  'dark');
+            knowledgeGraph.setOption({ 
+                title: {
+                    text: '知识点图谱',
+                    subtext: '上传数据后自动生成',
+                    left: 'center',
+                    top: 'center',
+                    textStyle: {
+                        color: '#e0e0e0',
+                        fontSize: 18 
+                    },
+                    subtextStyle: {
+                        color: '#a0a0a0',
+                        fontSize: 14 
+                    }
+                }
+            });
+ 
+            // 设置文件上传事件 
+            setupFileUpload('studentInfoUpload', 'studentInfoFile', processStudentInfo);
+            setupFileUpload('titleInfoUpload', 'titleInfoFile', processTitleInfo);
+            setupFileUpload('submitRecordUpload', 'submitRecordFile', processSubmitRecord);
+            setupFileUpload('knowledgeGraphUpload', 'knowledgeGraphFile', processKnowledgeGraph);
+            setupFileUpload('timeSeriesUpload', 'timeSeriesFile', processTimeSeries);
+            setupFileUpload('learningPatternUpload', 'learningPatternFile', processLearningPattern);
+ 
+            // 批量上传按钮 
+            document.getElementById('uploadAllBtn').addEventListener('click',  function() {
+                // 这里可以添加批量上传逻辑 
+                alert('批量上传功能将在完整版本中实现');
+            });
+ 
+            // 分析按钮 
+            document.getElementById('analyzeBtn').addEventListener('click',  function() {
+                // 这里可以添加分析逻辑 
+                alert('分析功能将在数据上传后启用');
+            });
+        });
+ 
+        function initEmptyChart(containerId, title) {
+            const chart = echarts.init(document.getElementById(containerId),  'dark');
+            chart.setOption({ 
+                title: {
+                    text: title,
+                    subtext: '上传数据后自动生成可视化图表',
+                    left: 'center',
+                    top: 'center',
+                    textStyle: {
+                        color: '#e0e0e0',
+                        fontSize: 18 
+                    },
+                    subtextStyle: {
+                        color: '#a0a0a0',
+                        fontSize: 14 
+                    }
+                },
+                xAxis: {
+                    show: false 
+                },
+                yAxis: {
+                    show: false 
+                },
+                series: []
+            });
+            return chart;
+        }
+ 
+        function setupFileUpload(uploadContainerId, fileInputId, processFunction) {
+            const uploadContainer = document.getElementById(uploadContainerId); 
+            const fileInput = document.getElementById(fileInputId); 
+ 
+            uploadContainer.addEventListener('click',  function() {
+                fileInput.click(); 
+            });
+ 
+            uploadContainer.addEventListener('dragover',  function(e) {
+                e.preventDefault(); 
+                this.style.borderColor  = '#3a86ff';
+                this.style.backgroundColor  = 'rgba(58, 134, 255, 0.2)';
+            });
+ 
+            uploadContainer.addEventListener('dragleave',  function(e) {
+                e.preventDefault(); 
+                this.style.borderColor  = 'rgba(255, 255, 255, 0.1)';
+                this.style.backgroundColor  = 'rgba(0, 0, 0, 0.2)';
+            });
+ 
+            uploadContainer.addEventListener('drop',  function(e) {
+                e.preventDefault(); 
+                this.style.borderColor  = 'rgba(255, 255, 255, 0.1)';
+                this.style.backgroundColor  = 'rgba(0, 0, 0, 0.2)';
+                
+                if (fileInput.multiple)  {
+                    fileInput.files  = e.dataTransfer.files; 
+                } else {
+                    fileInput.files  = [e.dataTransfer.files[0]];
+                }
+                
+                if (fileInput.files.length  > 0) {
+                    processFunction(fileInput.files); 
+                }
+            });
+ 
+            fileInput.addEventListener('change',  function() {
+                if (this.files.length  > 0) {
+                    processFunction(this.files); 
+                }
+            });
+        }
+ 
+        // 以下是数据处理函数 - 实际项目中需要根据具体数据格式实现 
+        function processStudentInfo(files) {
+            const file = files[0];
+            const reader = new FileReader();
+            
+            reader.onload  = function(e) {
+                const content = e.target.result; 
+                // 这里解析CSV数据并生成图表 
+                console.log(' 学生基本信息:', content);
+                
+                // 模拟数据处理 
+                const chart = echarts.init(document.getElementById('studentInfoChart'),  'dark');
+                chart.setOption({ 
+                    title: {
+                        text: '学习者基本信息分布',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        right: 10,
+                        top: 'center'
+                    },
+                    series: [
+                        {
+                            name: '性别分布',
+                            type: 'pie',
+                            radius: ['40%', '70%'],
+                            avoidLabelOverlap: false,
+                            itemStyle: {
+                                borderRadius: 10,
+                                borderColor: '#1e1e1e',
+                                borderWidth: 2 
+                            },
+                            label: {
+                                show: false,
+                                position: 'center'
+                            },
+                            emphasis: {
+                                label: {
+                                    show: true,
+                                    fontSize: '18',
+                                    fontWeight: 'bold'
+                                }
+                            },
+                            labelLine: {
+                                show: false 
+                            },
+                            data: [
+                                { value: 735, name: '男性' },
+                                { value: 629, name: '女性' }
+                            ]
+                        }
+                    ]
+                });
+                
+                // 更新上传区域显示 
+                document.getElementById('studentInfoUpload').innerHTML  = `
+                    <i class="fas fa-check-circle file-upload-icon" style="color: #4ade80;"></i>
+                    <div class="file-upload-text">
+                        <p>${file.name}</p> 
+                        <p class="panel-subtitle">上传成功，共1364条记录</p>
+                    </div>
+                `;
+            };
+            
+            reader.readAsText(file); 
+        }
+ 
+        function processTitleInfo(files) {
+            // 类似上面的实现，处理题目基本信息 
+        }
+ 
+        function processSubmitRecord(files) {
+            // 处理答题记录 
+        }
+ 
+        function processKnowledgeGraph(files) {
+            // 处理知识点图谱 
+        }
+ 
+        function processTimeSeries(files) {
+            // 处理时间序列数据 
+        }
+ 
+        function processLearningPattern(files) {
+            // 处理学习模式数据 
+        }
+    </script>
+</body>
+</html>
