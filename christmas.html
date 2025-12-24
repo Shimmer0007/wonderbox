@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <title>Ultimate Christmas Magic - Multi Gesture</title>
+        <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
+        
+        /* UI 容器 */
+        #ui-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 12px 24px;
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .active-mode {
+            background: rgba(255, 215, 0, 0.2); /* 金色高亮 */
+            border-color: rgba(255, 215, 0, 0.6);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .glass-panel h3 { margin: 0; font-size: 0.9rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px;}
+        .glass-panel div { margin-top: 5px; font-size: 1.1rem; font-weight: bold; }
+
+        /* 摄像头画中画 */
+        #camera-wrapper {
+            position: absolute;
+            top: 20px; left: 20px;
+            width: 180px; height: 135px;
+            z-index: 5;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            transform: scaleX(-1); /* 镜像 */
+        }
+        #input_video { width: 100%; height: 100%; object-fit: cover; }
+        
+        #loading {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            color: #fff; font-size: 20px; letter-spacing: 4px; text-shadow: 0 0 10px #fff;
+        }
+    </style>
+        <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
+            crossorigin="anonymous"></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+            crossorigin="anonymous"></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+            crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
+            crossorigin="anonymous"></script>
+    </head>
+    <body>
+
+        <div id="loading">粒子正在加载...</div>
+        <div id="camera-wrapper"><video id="input_video"></video></div>
+
+        <div id="ui-container">
+            <div class="glass-panel" id="mode-0"><h3>✊
+                    0指</h3><div>静谧 · Serenity</div></div>
+            <div class="glass-panel" id="mode-1"><h3>☝️
+                    1指</h3><div>轨迹 · Orbit</div></div>
+            <div class="glass-panel" id="mode-2"><h3>✌️
+                    2指</h3><div>螺旋 · Helix</div></div>
+            <div class="glass-panel" id="mode-3"><h3>👌
+                    3指</h3><div>结晶 · Crystallize</div></div>
+            <div class="glass-panel" id="mode-4"><h3>🖖
+                    4指</h3><div>视界 · Horizon</div></div>
+            <div class="glass-panel" id="mode-5"><h3>🖐️
+                    5指</h3><div>熵增 · Entropy</div></div>
+        </div>
+
+        <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        // --- Config ---
+        const CONFIG = {
+            particleCount: 160000,
+            lerpSpeed: 0.03, // 低数值会让过渡丝滑不突兀
+        };
+
+        // --- State Management ---
+        const targetState = {
+            openness: 0,      // 0=Tree, 1=Blizzard
+            tornado: 0,       // 1 Finger
+            candy: 0,         // 2 Fingers
+            ice: 0,           // 3 Fingers
+            galaxy: 0,        // 4 Fingers
+        };
+
+        const currentState = {
+            openness: 0, tornado: 0, candy: 0, ice: 0, galaxy: 0,
+            time: 0,
+            activeGesture: 0 // 0-5
+        };
+
+        // --- Three.js Init ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050505, 0.02); // Deep dark fog
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 2, 22);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        document.body.appendChild(renderer.domElement);
+
+        // --- Post Processing ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 1.6; // 稍微柔和一点的辉光
+        bloomPass.radius = 0.6;
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // --- Shader Code ---
+        const noiseChunk = `
+            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+            vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+            float snoise(vec3 v) { const vec2 C = vec2(1.0/6.0, 1.0/3.0); const vec4 D = vec4(0.0, 0.5, 1.0, 2.0); vec3 i = floor(v + dot(v, C.yyy)); vec3 x0 = v - i + dot(i, C.xxx); vec3 g = step(x0.yzx, x0.xyz); vec3 l = 1.0 - g; vec3 i1 = min(g.xyz, l.zxy); vec3 i2 = max(g.xyz, l.zxy); vec3 x1 = x0 - i1 + C.xxx; vec3 x2 = x0 - i2 + C.yyy; vec3 x3 = x0 - D.yyy; i = mod289(i); vec4 p = permute(permute(permute(i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0)); float n_ = 0.142857142857; vec3 ns = n_ * D.wyz - D.xzx; vec4 j = p - 49.0 * floor(p * ns.z * ns.z); vec4 x_ = floor(j * ns.z); vec4 y_ = floor(j - 7.0 * x_); vec4 x = x_ * ns.x + ns.yyyy; vec4 y = y_ * ns.x + ns.yyyy; vec4 h = 1.0 - abs(x) - abs(y); vec4 b0 = vec4(x.xy, y.xy); vec4 b1 = vec4(x.zw, y.zw); vec4 s0 = floor(b0) * 2.0 + 1.0; vec4 s1 = floor(b1) * 2.0 + 1.0; vec4 sh = -step(h, vec4(0.0)); vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy; vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww; vec3 p0 = vec3(a0.xy, h.x); vec3 p1 = vec3(a0.zw, h.y); vec3 p2 = vec3(a1.xy, h.z); vec3 p3 = vec3(a1.zw, h.w); vec4 norm = taylorInvSqrt(vec4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3))); p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w; vec4 m = max(0.6 - vec4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0); m = m * m; return 42.0 * dot(m * m, vec4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3))); }
+        `;
+
+        const vertexShader = `
+            uniform float uTime;
+            // Mode Weights (0.0 to 1.0)
+            uniform float uOpenness; // 5 Fingers
+            uniform float uTornado;  // 1 Finger
+            uniform float uCandy;    // 2 Fingers
+            uniform float uIce;      // 3 Fingers
+            uniform float uGalaxy;   // 4 Fingers
+            
+            attribute vec3 aTreePos;
+            attribute float aSize;
+            attribute float aRandom;
+            attribute vec3 aColor;
+            
+            varying vec3 vColor;
+            varying float vAlpha;
+            varying vec3 vPos;
+
+            ${noiseChunk}
+
+            void main() {
+                vPos = aTreePos;
+                
+                // --- Base Physics (Tree State) ---
+                // Freeze time for Ice mode
+                float timeScale = 1.0 - uIce * 0.95; 
+                float localTime = uTime * timeScale;
+                
+                float sway = snoise(vec3(aTreePos.x * 0.5, aTreePos.y * 0.5, localTime * 0.2)) * 0.2;
+                vec3 finalPos = aTreePos + vec3(sway, 0.0, sway);
+
+                // --- 1. Tornado Mode (1 Finger) ---
+                // Particles spiral upwards rapidly
+                if (uTornado > 0.01) {
+                    float angle = localTime * 3.0 + aTreePos.y * 0.5;
+                    float radius = length(aTreePos.xz) * (0.5 + sin(localTime) * 0.2);
+                    vec3 tornadoPos = vec3(
+                        cos(angle) * radius,
+                        aTreePos.y + sin(localTime * 2.0 + aRandom * 10.0), // Jitter Y
+                        sin(angle) * radius
+                    );
+                    finalPos = mix(finalPos, tornadoPos, uTornado);
+                }
+
+                // --- 4. Galaxy Mode (4 Fingers) ---
+                // Flatten Y, Expand XZ
+                if (uGalaxy > 0.01) {
+                    // Rotate whole galaxy slowly
+                    float galAngle = localTime * 0.5 + length(aTreePos) * 0.2;
+                    float galCos = cos(galAngle);
+                    float galSin = sin(galAngle);
+                    
+                    vec3 flatPos = aTreePos;
+                    flatPos.y *= 0.1; // Flatten
+                    flatPos.x = flatPos.x * 2.5; // Expand
+                    flatPos.z = flatPos.z * 2.5;
+                    
+                    // Rotate
+                    vec3 rotPos = vec3(
+                        flatPos.x * galCos - flatPos.z * galSin,
+                        flatPos.y + sin(length(flatPos.xz) - localTime) * 0.5, // Wave effect
+                        flatPos.x * galSin + flatPos.z * galCos
+                    );
+                    finalPos = mix(finalPos, rotPos, uGalaxy);
+                }
+
+                // --- 5. Chaos/Blizzard Mode (Open Palm) ---
+                if (uOpenness > 0.01) {
+                    vec3 noisePos = vec3(aTreePos.x * 0.3, aTreePos.y * 0.3, localTime * 0.3);
+                    vec3 wind = vec3(snoise(noisePos), snoise(noisePos+100.0), snoise(noisePos+200.0));
+                    
+                    // Gentle explosion, not too aggressive
+                    vec3 chaosDir = normalize(aTreePos) * (10.0 + aRandom * 5.0);
+                    vec3 chaosPos = (aTreePos * 1.5) + (wind * 5.0) + chaosDir;
+                    
+                    // Reduced Z surge (solved user complaint about sensitivity)
+                    chaosPos.z += sin(localTime + aRandom * 10.0) * 2.0; 
+                    
+                    finalPos = mix(finalPos, chaosPos, uOpenness);
+                }
+
+                vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
+                
+                // Color Mixing Logic
+                vec3 cGold = vec3(1.0, 0.8, 0.1);
+                vec3 cBlue = vec3(0.1, 0.8, 1.0); // Ice
+                vec3 cPurple = vec3(0.8, 0.2, 1.0); // Galaxy
+                vec3 cCandyBase = vec3(1.0, 1.0, 1.0); // Candy White
+
+                vec3 targetColor = aColor;
+                
+                // Mix to Ice Blue
+                targetColor = mix(targetColor, cBlue + vec3(aRandom*0.2), uIce);
+                
+                // Mix to Galaxy Purple
+                targetColor = mix(targetColor, cPurple + vec3(aRandom*0.3), uGalaxy);
+                
+                // Mix to Gold (Tornado)
+                targetColor = mix(targetColor, cGold, uTornado * 0.8);
+
+                vColor = targetColor;
+                vPos = finalPos; // Pass modified position for fragment shader patterns
+
+                // Size
+                float sizeMult = 1.0 + uOpenness * 1.5 + uGalaxy * 0.5;
+                gl_PointSize = (aSize * sizeMult) * (300.0 / -mvPosition.z);
+                gl_Position = projectionMatrix * mvPosition;
+                
+                vAlpha = smoothstep(2.0, 6.0, -mvPosition.z);
+            }
+        `;
+
+        const fragmentShader = `
+            uniform float uCandy;
+            uniform float uTime;
+            
+            varying vec3 vColor;
+            varying float vAlpha;
+            varying vec3 vPos;
+
+            void main() {
+                vec2 coord = gl_PointCoord - vec2(0.5);
+                float dist = length(coord);
+                if (dist > 0.5) discard;
+
+                float strength = 1.0 - (dist * 2.0);
+                strength = pow(strength, 2.0);
+
+                vec3 finalColor = vColor;
+
+                // --- Candy Cane Pattern (Fragment Level) ---
+                if (uCandy > 0.01) {
+                    // Create diagonal stripes
+                    float stripe = sin(vPos.y * 2.0 + vPos.x * 2.0 + uTime * 2.0);
+                    vec3 red = vec3(1.0, 0.1, 0.2);
+                    vec3 white = vec3(1.0, 0.95, 0.9);
+                    
+                    // Hard mix for stripes
+                    vec3 candyCol = mix(red, white, step(0.0, stripe));
+                    finalColor = mix(finalColor, candyCol, uCandy);
+                }
+
+                gl_FragColor = vec4(finalColor, strength * vAlpha);
+            }
+        `;
+
+        // --- Geometry ---
+        const geometry = new THREE.BufferGeometry();
+        const positions = []; const treePosAttr = []; const colors = []; const sizes = []; const randoms = [];
+        const colorGreen = new THREE.Color(0x006400); 
+        const colorGold = new THREE.Color(0xffd700);
+
+        for (let i = 0; i < CONFIG.particleCount; i++) {
+            const r = Math.random();
+            const h = Math.random();
+            const theta = h * 50.0 + (Math.random() * 0.5);
+            const radius = (1.0 - h) * 6.0 + (Math.random() * 1.0); // Base Radius 6
+            const x = radius * Math.cos(theta);
+            const z = radius * Math.sin(theta);
+            const y = (h * 16.0) - 8.0; // Height 16
+            
+            treePosAttr.push(x, y, z); positions.push(x, y, z);
+            randoms.push(r);
+            sizes.push(Math.random() * 0.12 + 0.03);
+            
+            let c = new THREE.Color();
+            if (r > 0.9) c.setHex(0xff0044); // Red ornaments
+            else if (r > 0.7) c.copy(colorGold);
+            else c.copy(colorGreen).lerp(new THREE.Color(0x22ff22), h * 0.4);
+            
+            colors.push(c.r, c.g, c.b);
+        }
+
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setAttribute('aTreePos', new THREE.Float32BufferAttribute(treePosAttr, 3));
+        geometry.setAttribute('aColor', new THREE.Float32BufferAttribute(colors, 3));
+        geometry.setAttribute('aSize', new THREE.Float32BufferAttribute(sizes, 1));
+        geometry.setAttribute('aRandom', new THREE.Float32BufferAttribute(randoms, 1));
+
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: 0 },
+                uOpenness: { value: 0 },
+                uTornado: { value: 0 },
+                uCandy: { value: 0 },
+                uIce: { value: 0 },
+                uGalaxy: { value: 0 }
+            },
+            vertexShader: vertexShader, fragmentShader: fragmentShader,
+            transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+        });
+
+        scene.add(new THREE.Points(geometry, material));
+
+        // --- Interaction ---
+        const videoElement = document.getElementById('input_video');
+        
+        function updateUI(activeGesture) {
+            for(let i=0; i<=5; i++) {
+                const el = document.getElementById(`mode-${i}`);
+                if(i === activeGesture) el.classList.add('active-mode');
+                else el.classList.remove('active-mode');
+            }
+        }
+
+        function onResults(results) {
+            document.getElementById('loading').style.display = 'none';
+            
+            // Reset Targets
+            let tOpen=0, tTorn=0, tCandy=0, tIce=0, tGalaxy=0;
+            let gesture = 0;
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const lm = results.multiHandLandmarks[0];
+                const wrist = lm[0];
+                
+                // Finger Counter Logic
+                const fingers = [8, 12, 16, 20]; // Index, Middle, Ring, Pinky
+                const mcps = [5, 9, 13, 17];
+                let count = 0;
+                
+                // Check Thumb (Vector logic)
+                const thumbTip = lm[4]; const thumbIP = lm[3]; const thumbMCP = lm[2];
+                // Simple thumb check: is tip further from pinky base than IP?
+                if(Math.abs(thumbTip.x - lm[17].x) > Math.abs(thumbIP.x - lm[17].x)) count++;
+
+                // Check other 4 fingers
+                fingers.forEach((tipIdx, i) => {
+                    const tip = lm[tipIdx]; const mcp = lm[mcps[i]];
+                    const distTip = Math.hypot(tip.x - wrist.x, tip.y - wrist.y);
+                    const distMCP = Math.hypot(mcp.x - wrist.x, mcp.y - wrist.y);
+                    if (distTip > distMCP * 1.1) count++;
+                });
+
+                // --- Gesture Mapping ---
+                if (count === 0) { gesture = 0; } // Tree
+                else if (count === 1) { gesture = 1; tTorn = 1.0; } // Tornado
+                else if (count === 2) { gesture = 2; tCandy = 1.0; } // Candy
+                else if (count === 3) { gesture = 3; tIce = 1.0; } // Ice
+                else if (count === 4) { gesture = 4; tGalaxy = 1.0; } // Galaxy
+                else { gesture = 5; tOpen = 1.0; } // Blizzard
+            }
+
+            // Update Targets
+            targetState.openness = tOpen;
+            targetState.tornado = tTorn;
+            targetState.candy = tCandy;
+            targetState.ice = tIce;
+            targetState.galaxy = tGalaxy;
+            currentState.activeGesture = gesture;
+            updateUI(gesture);
+        }
+
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        hands.setOptions({maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6});
+        hands.onResults(onResults);
+
+        const cameraUtils = new Camera(videoElement, {
+            onFrame: async () => { await hands.send({image: videoElement}); },
+            width: 320, height: 240
+        });
+        cameraUtils.start();
+
+        // --- Loop ---
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = clock.getDelta();
+            currentState.time += dt;
+
+            // Smooth Lerp (Using slower constant for majesty)
+            const k = CONFIG.lerpSpeed;
+            currentState.openness += (targetState.openness - currentState.openness) * k;
+            currentState.tornado += (targetState.tornado - currentState.tornado) * k;
+            currentState.candy += (targetState.candy - currentState.candy) * k;
+            currentState.ice += (targetState.ice - currentState.ice) * k;
+            currentState.galaxy += (targetState.galaxy - currentState.galaxy) * k;
+
+            // Update Uniforms
+            material.uniforms.uTime.value = currentState.time;
+            material.uniforms.uOpenness.value = currentState.openness;
+            material.uniforms.uTornado.value = currentState.tornado;
+            material.uniforms.uCandy.value = currentState.candy;
+            material.uniforms.uIce.value = currentState.ice;
+            material.uniforms.uGalaxy.value = currentState.galaxy;
+
+            // Gentle Camera Rotation
+            const rotSpeed = 0.1 + currentState.tornado * 0.2 + currentState.openness * 0.1;
+            const dist = 22 + currentState.galaxy * 10; // Zoom out for galaxy
+            camera.position.x = Math.sin(currentState.time * rotSpeed) * dist;
+            camera.position.z = Math.cos(currentState.time * rotSpeed) * dist;
+            camera.lookAt(0, 0, 0);
+
+            composer.render();
+        }
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+    </body>
+</html>
