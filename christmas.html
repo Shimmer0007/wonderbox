@@ -122,12 +122,14 @@
             candy: 0,         // 2 Fingers
             ice: 0,           // 3 Fingers
             galaxy: 0,        // 4 Fingers
+            textMode: 0,      // Text formation
         };
 
         const currentState = {
-            openness: 0, tornado: 0, candy: 0, ice: 0, galaxy: 0,
+            openness: 0, tornado: 0, candy: 0, ice: 0, galaxy: 0, textMode: 0,
             time: 0,
-            activeGesture: 0 // 0-5
+            activeGesture: 0, // 0-5
+            textTimer: 0,     // Timer for text animation
         };
 
         // --- Three.js Init ---
@@ -169,11 +171,13 @@
             uniform float uCandy;    // 2 Fingers
             uniform float uIce;      // 3 Fingers
             uniform float uGalaxy;   // 4 Fingers
+            uniform float uTextMode; // Text formation mode (0-1)
             
             attribute vec3 aTreePos;
             attribute float aSize;
             attribute float aRandom;
             attribute vec3 aColor;
+            attribute vec3 aTextPos; // Target position for text
             
             varying vec3 vColor;
             varying float vAlpha;
@@ -242,6 +246,21 @@
                     finalPos = mix(finalPos, chaosPos, uOpenness);
                 }
 
+                // --- 6. Text Formation Mode ---
+                // When uTextMode is active, particles converge to form text
+                if (uTextMode > 0.01) {
+                    // First explode, then converge to text position
+                    vec3 explodeDir = normalize(aTreePos) * (15.0 + aRandom * 8.0);
+                    vec3 explodePos = aTreePos * 2.0 + explodeDir;
+                    
+                    // Smooth transition: explode -> converge to text
+                    float textProgress = smoothstep(0.0, 1.0, uTextMode);
+                    vec3 textTargetPos = mix(explodePos, aTextPos, textProgress);
+                    
+                    finalPos = mix(finalPos, textTargetPos, min(uTextMode * 1.5, 1.0));
+                }
+
+
                 vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
                 
                 // Color Mixing Logic
@@ -260,6 +279,10 @@
                 
                 // Mix to Gold (Tornado)
                 targetColor = mix(targetColor, cGold, uTornado * 0.8);
+
+                // Mix to Text Color (Deep Red/Gold for visibility)
+                vec3 cText = vec3(0.9, 0.2, 0.1); // Deep red for better contrast
+                targetColor = mix(targetColor, cText, uTextMode);
 
                 vColor = targetColor;
                 vPos = finalPos; // Pass modified position for fragment shader patterns
@@ -307,6 +330,54 @@
             }
         `;
 
+        // --- Text Particle Position Generator ---
+        function generateTextPositions(text, particleCount) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 1024;
+            canvas.height = 256;
+            
+            // Draw text
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 120px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+            
+            // Sample pixels
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            const textPixels = [];
+            
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const i = (y * canvas.width + x) * 4;
+                    if (pixels[i] > 128) { // White pixel
+                        textPixels.push({ x, y });
+                    }
+                }
+            }
+            
+            // Generate positions for all particles
+            const positions = [];
+            for (let i = 0; i < particleCount; i++) {
+                if (textPixels.length > 0) {
+                    const pixel = textPixels[Math.floor(Math.random() * textPixels.length)];
+                    // Convert to 3D space (centered, scaled)
+                    const x = (pixel.x / canvas.width - 0.5) * 40; // Scale to fit scene
+                    const y = -(pixel.y / canvas.height - 0.5) * 10;
+                    const z = 0;
+                    positions.push(x, y, z);
+                } else {
+                    positions.push(0, 0, 0);
+                }
+            }
+            
+            return positions;
+        }
+
         // --- Geometry ---
         const geometry = new THREE.BufferGeometry();
         const positions = []; const treePosAttr = []; const colors = []; const sizes = []; const randoms = [];
@@ -334,11 +405,15 @@
             colors.push(c.r, c.g, c.b);
         }
 
+        // Generate text positions for "Happy Holiday!"
+        const textPositions = generateTextPositions('Happy Holiday!', CONFIG.particleCount);
+
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         geometry.setAttribute('aTreePos', new THREE.Float32BufferAttribute(treePosAttr, 3));
         geometry.setAttribute('aColor', new THREE.Float32BufferAttribute(colors, 3));
         geometry.setAttribute('aSize', new THREE.Float32BufferAttribute(sizes, 1));
         geometry.setAttribute('aRandom', new THREE.Float32BufferAttribute(randoms, 1));
+        geometry.setAttribute('aTextPos', new THREE.Float32BufferAttribute(textPositions, 3));
 
         const material = new THREE.ShaderMaterial({
             uniforms: {
@@ -347,7 +422,8 @@
                 uTornado: { value: 0 },
                 uCandy: { value: 0 },
                 uIce: { value: 0 },
-                uGalaxy: { value: 0 }
+                uGalaxy: { value: 0 },
+                uTextMode: { value: 0 }
             },
             vertexShader: vertexShader, fragmentShader: fragmentShader,
             transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
@@ -439,6 +515,23 @@
             currentState.ice += (targetState.ice - currentState.ice) * k;
             currentState.galaxy += (targetState.galaxy - currentState.galaxy) * k;
 
+            // Text Animation Logic
+            // When hand is fully open (gesture 5), trigger text animation after a delay
+            if (currentState.activeGesture === 5 && currentState.openness > 0.8) {
+                currentState.textTimer += dt;
+                
+                // After 1 second of open hand, start text formation
+                if (currentState.textTimer > 1.0) {
+                    targetState.textMode = 1.0;
+                }
+            } else {
+                // Reset text animation when hand closes
+                currentState.textTimer = 0;
+                targetState.textMode = 0;
+            }
+            
+            currentState.textMode += (targetState.textMode - currentState.textMode) * k * 0.5;
+
             // Update Uniforms
             material.uniforms.uTime.value = currentState.time;
             material.uniforms.uOpenness.value = currentState.openness;
@@ -446,13 +539,29 @@
             material.uniforms.uCandy.value = currentState.candy;
             material.uniforms.uIce.value = currentState.ice;
             material.uniforms.uGalaxy.value = currentState.galaxy;
+            material.uniforms.uTextMode.value = currentState.textMode;
+
+            // Adjust bloom strength for text clarity
+            // Reduce bloom when text is displayed for better readability
+            bloomPass.strength = 1.6 * (1.0 - currentState.textMode * 0.7);
 
             // Gentle Camera Rotation
-            const rotSpeed = 0.1 + currentState.tornado * 0.2 + currentState.openness * 0.1;
-            const dist = 22 + currentState.galaxy * 10; // Zoom out for galaxy
-            camera.position.x = Math.sin(currentState.time * rotSpeed) * dist;
-            camera.position.z = Math.cos(currentState.time * rotSpeed) * dist;
-            camera.lookAt(0, 0, 0);
+            // Stop rotation when text is displayed
+            if (currentState.textMode > 0.5) {
+                // Fixed camera position for text viewing (front view)
+                const textDist = 35; // Further back to see full text
+                camera.position.x = 0;
+                camera.position.y = 2;
+                camera.position.z = textDist;
+                camera.lookAt(0, 0, 0);
+            } else {
+                // Normal rotation
+                const rotSpeed = 0.1 + currentState.tornado * 0.2 + currentState.openness * 0.1;
+                const dist = 22 + currentState.galaxy * 10; // Zoom out for galaxy
+                camera.position.x = Math.sin(currentState.time * rotSpeed) * dist;
+                camera.position.z = Math.cos(currentState.time * rotSpeed) * dist;
+                camera.lookAt(0, 0, 0);
+            }
 
             composer.render();
         }
