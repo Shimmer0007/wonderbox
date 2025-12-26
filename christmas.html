@@ -391,8 +391,8 @@
                 }
             } else if (isMobile) {
                 // Regular mobile phones
-                if (aspectRatio < 0.6) {
-                    // Very tall screens (portrait)
+                if (aspectRatio < 0.8) {
+                    // Portrait screens (most mobile phones in portrait mode)
                     fontSize = 70;
                     ctx.font = `bold ${fontSize}px Arial`;
                     ctx.textAlign = 'center';
@@ -453,7 +453,7 @@
                     scaleY = 10;
                 }
             } else if (isMobile) {
-                if (aspectRatio < 0.6) {
+                if (aspectRatio < 0.8) {
                     // Portrait phone: taller, narrower
                     scaleX = 22;
                     scaleY = 20;
@@ -677,7 +677,7 @@
                         textDist = 28;
                     }
                 } else if (isMobile) {
-                    if (aspectRatio < 0.6) {
+                    if (aspectRatio < 0.8) {
                         // Portrait phone: closer for vertical text
                         textDist = 26;
                     } else {
