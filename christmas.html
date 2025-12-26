@@ -330,21 +330,60 @@
             }
         `;
 
-        // --- Text Particle Position Generator ---
+        // --- Text Particle Position Generator (Responsive) ---
         function generateTextPositions(text, particleCount) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            canvas.width = 1024;
-            canvas.height = 256;
+            
+            // Responsive canvas sizing based on viewport
+            const isMobile = window.innerWidth < 768;
+            const aspectRatio = window.innerWidth / window.innerHeight;
+            
+            // Adjust canvas dimensions for different screen sizes
+            if (isMobile) {
+                // Mobile: smaller, more compact
+                canvas.width = 800;
+                canvas.height = 400;
+            } else {
+                // Desktop: larger canvas
+                canvas.width = 1024;
+                canvas.height = 256;
+            }
             
             // Draw text
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'white';
-            ctx.font = 'bold 120px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+            
+            // Responsive font sizing
+            let fontSize;
+            if (isMobile) {
+                // Mobile: split text into two lines if needed
+                if (aspectRatio < 0.6) {
+                    // Very tall screens (like phones in portrait)
+                    fontSize = 80;
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    // Draw in two lines
+                    ctx.fillText('Happy', canvas.width / 2, canvas.height / 2 - 60);
+                    ctx.fillText('Holiday!', canvas.width / 2, canvas.height / 2 + 60);
+                } else {
+                    // Mobile landscape or tablet
+                    fontSize = 90;
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+                }
+            } else {
+                // Desktop: single line
+                fontSize = 120;
+                ctx.font = `bold ${fontSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+            }
             
             // Sample pixels
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -362,12 +401,31 @@
             
             // Generate positions for all particles
             const positions = [];
+            
+            // Responsive scaling based on screen size
+            let scaleX, scaleY;
+            if (isMobile) {
+                if (aspectRatio < 0.6) {
+                    // Portrait phone: taller, narrower
+                    scaleX = 25;
+                    scaleY = 20;
+                } else {
+                    // Landscape mobile/tablet
+                    scaleX = 30;
+                    scaleY = 12;
+                }
+            } else {
+                // Desktop: original scale
+                scaleX = 40;
+                scaleY = 10;
+            }
+            
             for (let i = 0; i < particleCount; i++) {
                 if (textPixels.length > 0) {
                     const pixel = textPixels[Math.floor(Math.random() * textPixels.length)];
                     // Convert to 3D space (centered, scaled)
-                    const x = (pixel.x / canvas.width - 0.5) * 40; // Scale to fit scene
-                    const y = -(pixel.y / canvas.height - 0.5) * 10;
+                    const x = (pixel.x / canvas.width - 0.5) * scaleX;
+                    const y = -(pixel.y / canvas.height - 0.5) * scaleY;
                     const z = 0;
                     positions.push(x, y, z);
                 } else {
@@ -545,11 +603,28 @@
             // Reduce bloom when text is displayed for better readability
             bloomPass.strength = 1.6 * (1.0 - currentState.textMode * 0.7);
 
-            // Gentle Camera Rotation
+            // Gentle Camera Rotation (Responsive)
             // Stop rotation when text is displayed
             if (currentState.textMode > 0.5) {
                 // Fixed camera position for text viewing (front view)
-                const textDist = 35; // Further back to see full text
+                // Responsive camera distance based on screen aspect ratio
+                const isMobile = window.innerWidth < 768;
+                const aspectRatio = window.innerWidth / window.innerHeight;
+                
+                let textDist;
+                if (isMobile) {
+                    if (aspectRatio < 0.6) {
+                        // Portrait phone: closer for vertical text
+                        textDist = 28;
+                    } else {
+                        // Landscape mobile: medium distance
+                        textDist = 32;
+                    }
+                } else {
+                    // Desktop: further back
+                    textDist = 35;
+                }
+                
                 camera.position.x = 0;
                 camera.position.y = 2;
                 camera.position.z = textDist;
@@ -566,11 +641,22 @@
             composer.render();
         }
         
+        // Resize handler with text regeneration
+        let resizeTimeout;
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
             composer.setSize(window.innerWidth, window.innerHeight);
+            
+            // Debounce text regeneration to avoid performance issues
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                // Regenerate text positions for new screen size
+                const newTextPositions = generateTextPositions('Happy Holiday!', CONFIG.particleCount);
+                geometry.setAttribute('aTextPos', new THREE.Float32BufferAttribute(newTextPositions, 3));
+                geometry.attributes.aTextPos.needsUpdate = true;
+            }, 300);
         });
 
         animate();
