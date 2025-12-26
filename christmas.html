@@ -336,14 +336,28 @@
             const ctx = canvas.getContext('2d');
             
             // Responsive canvas sizing based on viewport
-            const isMobile = window.innerWidth < 768;
-            const aspectRatio = window.innerWidth / window.innerHeight;
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const aspectRatio = screenWidth / screenHeight;
+            
+            // More granular screen size detection
+            const isSmallPhone = screenWidth < 400;
+            const isMobile = screenWidth < 768;
+            const isTablet = screenWidth >= 768 && screenWidth < 1024;
             
             // Adjust canvas dimensions for different screen sizes
-            if (isMobile) {
-                // Mobile: smaller, more compact
+            if (isSmallPhone) {
+                // Very small phones
+                canvas.width = 600;
+                canvas.height = 500;
+            } else if (isMobile) {
+                // Regular mobile phones
                 canvas.width = 800;
-                canvas.height = 400;
+                canvas.height = 450;
+            } else if (isTablet) {
+                // Tablets
+                canvas.width = 900;
+                canvas.height = 300;
             } else {
                 // Desktop: larger canvas
                 canvas.width = 1024;
@@ -355,27 +369,51 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'white';
             
-            // Responsive font sizing
+            // Responsive font sizing and layout
             let fontSize;
-            if (isMobile) {
-                // Mobile: split text into two lines if needed
-                if (aspectRatio < 0.6) {
-                    // Very tall screens (like phones in portrait)
-                    fontSize = 80;
+            if (isSmallPhone) {
+                // Very small phones: always split into two lines
+                if (aspectRatio < 0.7) {
+                    // Portrait
+                    fontSize = 60;
                     ctx.font = `bold ${fontSize}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    // Draw in two lines
-                    ctx.fillText('Happy', canvas.width / 2, canvas.height / 2 - 60);
-                    ctx.fillText('Holiday!', canvas.width / 2, canvas.height / 2 + 60);
+                    ctx.fillText('Happy', canvas.width / 2, canvas.height / 2 - 80);
+                    ctx.fillText('Holiday!', canvas.width / 2, canvas.height / 2 + 80);
                 } else {
-                    // Mobile landscape or tablet
-                    fontSize = 90;
+                    // Landscape
+                    fontSize = 70;
                     ctx.font = `bold ${fontSize}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(text, canvas.width / 2, canvas.height / 2);
                 }
+            } else if (isMobile) {
+                // Regular mobile phones
+                if (aspectRatio < 0.6) {
+                    // Very tall screens (portrait)
+                    fontSize = 70;
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('Happy', canvas.width / 2, canvas.height / 2 - 70);
+                    ctx.fillText('Holiday!', canvas.width / 2, canvas.height / 2 + 70);
+                } else {
+                    // Landscape or wider phones
+                    fontSize = 85;
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+                }
+            } else if (isTablet) {
+                // Tablets
+                fontSize = 100;
+                ctx.font = `bold ${fontSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, canvas.width / 2, canvas.height / 2);
             } else {
                 // Desktop: single line
                 fontSize = 120;
@@ -404,16 +442,30 @@
             
             // Responsive scaling based on screen size
             let scaleX, scaleY;
-            if (isMobile) {
+            if (isSmallPhone) {
+                if (aspectRatio < 0.7) {
+                    // Portrait small phone: compact
+                    scaleX = 18;
+                    scaleY = 18;
+                } else {
+                    // Landscape small phone
+                    scaleX = 24;
+                    scaleY = 10;
+                }
+            } else if (isMobile) {
                 if (aspectRatio < 0.6) {
                     // Portrait phone: taller, narrower
-                    scaleX = 25;
+                    scaleX = 22;
                     scaleY = 20;
                 } else {
-                    // Landscape mobile/tablet
-                    scaleX = 30;
+                    // Landscape mobile/wider phones
+                    scaleX = 28;
                     scaleY = 12;
                 }
+            } else if (isTablet) {
+                // Tablets
+                scaleX = 35;
+                scaleY = 12;
             } else {
                 // Desktop: original scale
                 scaleX = 40;
@@ -608,18 +660,33 @@
             if (currentState.textMode > 0.5) {
                 // Fixed camera position for text viewing (front view)
                 // Responsive camera distance based on screen aspect ratio
-                const isMobile = window.innerWidth < 768;
-                const aspectRatio = window.innerWidth / window.innerHeight;
+                const screenWidth = window.innerWidth;
+                const aspectRatio = screenWidth / window.innerHeight;
+                
+                const isSmallPhone = screenWidth < 400;
+                const isMobile = screenWidth < 768;
+                const isTablet = screenWidth >= 768 && screenWidth < 1024;
                 
                 let textDist;
-                if (isMobile) {
+                if (isSmallPhone) {
+                    if (aspectRatio < 0.7) {
+                        // Portrait small phone: closer for vertical text
+                        textDist = 24;
+                    } else {
+                        // Landscape small phone
+                        textDist = 28;
+                    }
+                } else if (isMobile) {
                     if (aspectRatio < 0.6) {
                         // Portrait phone: closer for vertical text
-                        textDist = 28;
+                        textDist = 26;
                     } else {
                         // Landscape mobile: medium distance
-                        textDist = 32;
+                        textDist = 30;
                     }
+                } else if (isTablet) {
+                    // Tablets
+                    textDist = 33;
                 } else {
                     // Desktop: further back
                     textDist = 35;
