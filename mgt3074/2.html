@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1400">
+<title>PediAI US — D5 Storyboard Slide</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #fff;
+    width: 1400px;
+    margin: 0 auto;
+  }
+  .header-bar {
+    background: #0f172a;
+    color: #fff;
+    padding: 14px 44px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+  }
+  .title-section {
+    padding: 28px 44px 16px;
+  }
+  .title-section h1 {
+    font-size: 36px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 7px;
+  }
+  .title-section p {
+    font-size: 14px;
+    color: #64748b;
+    font-style: italic;
+  }
+  .phones-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 12px 28px 0;
+  }
+  .phone-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 195px;
+  }
+  .phone {
+    width: 176px;
+    height: 346px;
+    background: #0f172a;
+    border-radius: 30px;
+    padding: 6px;
+  }
+  .phone-inner {
+    background: #f8fafc;
+    border-radius: 24px;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .sbar {
+    background: #0f172a;
+    color: #94a3b8;
+    font-size: 8px;
+    padding: 5px 12px;
+    display: flex;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .abar {
+    background: #1e40af;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+  .abar-av {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: #3b82f6;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .abar-name { color: #fff; font-size: 11px; font-weight: 700; }
+  .abar-sub  { color: #93c5fd; font-size: 8px; }
+  .abar-badge {
+    margin-left: auto;
+    background: #1d4ed8; color: #bfdbfe;
+    font-size: 8px; font-weight: 700;
+    padding: 2px 6px; border-radius: 10px;
+    border: 1px solid #3b82f6;
+  }
+  .sdots {
+    background: #fff;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    border-bottom: 0.5px solid #e2e8f0;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #cbd5e1; }
+  .dot.active { background: #2563eb; width: 16px; border-radius: 3px; }
+  .dot.done   { background: #2563eb; }
+  .dot-lbl { font-size: 8px; color: #94a3b8; margin-left: auto; font-weight: 500; }
+  .chat {
+    flex: 1;
+    padding: 8px 8px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
+    background: #f8fafc;
+  }
+  .bai { display: flex; align-items: flex-end; gap: 5px; max-width: 92%; align-self: flex-start; }
+  .bai-av {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #2563eb; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .bai-txt {
+    background: #fff;
+    border: 0.5px solid #e2e8f0;
+    border-radius: 12px 12px 12px 3px;
+    padding: 7px 9px;
+    font-size: 8px; color: #1e293b; line-height: 1.5;
+  }
+  .bai-txt strong { font-weight: 700; }
+  .bai-txt em { font-style: italic; }
+  .bu { align-self: flex-end; max-width: 82%; }
+  .bu-txt {
+    background: #2563eb; color: #fff;
+    border-radius: 12px 12px 3px 12px;
+    padding: 7px 9px; font-size: 8px; line-height: 1.5;
+  }
+  .typing { display: flex; align-items: flex-end; gap: 5px; align-self: flex-start; }
+  .tdots {
+    background: #fff; border: 0.5px solid #e2e8f0;
+    border-radius: 12px 12px 12px 3px;
+    padding: 8px 10px; display: flex; gap: 3px; align-items: center;
+  }
+  .tdots span { width: 5px; height: 5px; border-radius: 50%; background: #94a3b8; }
+  .input-mock {
+    background: #fff;
+    border-top: 0.5px solid #e2e8f0;
+    padding: 7px 8px;
+    display: flex; gap: 6px; align-items: center;
+    flex-shrink: 0;
+  }
+  .input-field {
+    flex: 1; border: 1px solid #e2e8f0; border-radius: 14px;
+    padding: 5px 10px; font-size: 8px; color: #94a3b8;
+    background: #f8fafc;
+  }
+  .send-mock {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #2563eb;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .action-mock {
+    background: #fff;
+    border-top: 0.5px solid #e2e8f0;
+    padding: 7px 8px;
+    display: flex; flex-direction: column; gap: 5px;
+    flex-shrink: 0;
+  }
+  .btn-p { background: #2563eb; color: #fff; border-radius: 8px; padding: 6px 0; font-size: 8px; font-weight: 700; text-align: center; }
+  .btn-s { background: #fff; color: #2563eb; border: 1px solid #2563eb; border-radius: 8px; padding: 5px 0; font-size: 8px; text-align: center; }
+  .result-card {
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 8px;
+    display: flex; flex-direction: column; gap: 5px;
+    margin: 0 1px;
+  }
+  .badge-u { background: #fef2f2; color: #991b1b; font-size: 8px; font-weight: 700; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+  .rdiag { font-size: 9px; font-weight: 700; color: #0f172a; }
+  .rnote { font-size: 7.5px; color: #475569; line-height: 1.4; }
+  .chip-row { display: flex; gap: 4px; flex-wrap: wrap; }
+  .chip { background: #f1f5f9; border-radius: 5px; padding: 3px 7px; font-size: 7px; color: #334155; font-weight: 600; }
+  .chip-b { background: #eff6ff; color: #1e40af; border-radius: 5px; padding: 3px 7px; font-size: 7px; font-weight: 600; }
+  .act-s {
+    display: flex; align-items: flex-start; gap: 6px;
+    padding: 5px 7px; background: #f8fafc;
+    border: 0.5px solid #e2e8f0; border-radius: 6px;
+  }
+  .act-num {
+    width: 15px; height: 15px; border-radius: 50%;
+    background: #2563eb; color: #fff;
+    font-size: 8px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .act-txt { font-size: 7.5px; color: #374151; line-height: 1.4; }
+  .notif-s {
+    background: #f0fdf4; border-radius: 6px;
+    padding: 5px 8px; font-size: 8px; color: #166534;
+    font-weight: 600; border: 0.5px solid #bbf7d0;
+  }
+  .step-label {
+    font-size: 10px; color: #fff;
+    background: #0f172a;
+    border-radius: 0 0 8px 8px;
+    padding: 5px 0; text-align: center;
+    width: 176px; font-weight: 600; letter-spacing: 0.4px;
+  }
+  .arrow {
+    display: flex; align-items: center;
+    padding: 0 4px;
+    margin-top: -34px;
+    flex-shrink: 0;
+  }
+  .footer-bar {
+    background: #0f172a;
+    color: #94a3b8;
+    font-size: 9px;
+    padding: 10px 44px;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 14px;
+  }
+  .ai-icon { display: inline-block; width: 10px; height: 10px; }
+</style>
+</head>
+<body>
+
+<div class="header-bar">D5 — Prototype &nbsp;|&nbsp; Storyboard / Wireframe</div>
+
+<div class="title-section">
+  <h1>PediAI: 5-step user flow (US version)</h1>
+  <p>User: parent of a child aged 0–12 &nbsp;·&nbsp; AI-powered pediatric chat assistant &nbsp;·&nbsp; Acceptable formats: wireframe, storyboard, mock-up, app screens, concept diagram.</p>
+</div>
+
+<div class="phones-row">
+
+  <!-- ① Welcome -->
+  <div class="phone-wrap">
+    <div class="phone"><div class="phone-inner">
+      <div class="sbar"><span>9:41</span><span>PediAI</span><span>5G ▪▪▪</span></div>
+      <div class="abar">
+        <div class="abar-av"><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><path d="M8 12h8M12 8v8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div><div class="abar-name">PediAI Assistant</div><div class="abar-sub">● Online · Responds instantly</div></div>
+        <div class="abar-badge">AI</div>
+      </div>
+      <div class="sdots">
+        <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span class="dot-lbl">Step 1 of 5</span>
+      </div>
+      <div class="chat">
+        <div class="bai">
+          <div class="bai-av"><svg width="10" height="10" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M8 12h8M12 8v8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+          <div class="bai-txt">👋 Hi there! I'm <strong>PediAI</strong>, your AI-powered pediatric health assistant.<br><br>I'll ask you <strong>two quick questions</strong>, then give you personalized guidance. Ready?</div>
+        </div>
+        <div class="typing">
+          <div class="bai-av"><svg width="10" height="10" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M8 12h8M12 8v8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+          <div class="tdots"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+      <div class="action-mock"><div class="btn-p">Yes, let's go →</div></div>
+    </div></div>
+    <div class="step-label">Step 1 — Welcome</div>
+  </div>
+
+  <div class="arrow">
+    <svg width="26" height="16" viewBox="0 0 26 16"><polygon points="0,5 16,5 16,0 26,8 16,16 16,11 0,11" fill="#2563eb"/></svg>
+  </div>
+
+  <!-- ② Q1 -->
+  <div class="phone-wrap">
+    <div class="phone"><div class="phone-inner">
+      <div class="sbar"><span>9:41</span><span>PediAI</span><span>5G ▪▪▪</span></div>
+      <div class="abar">
+        <div class="abar-av"><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><path d="M8 12h8M12 8v8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div><div class="abar-name">PediAI Assistant</div><div class="abar-sub">● Online · Responds instantly</div></div>
+        <div class="abar-badge">AI</div>
+      </div>
+      <div class="sdots">
+        <div class="dot done"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span class="dot-lbl">Step 2 of 5</span>
+      </div>
+      <div class="chat">
+        <div class="bai">
+          <div class="bai-av"><svg width="10" height="10" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M8 12h8M12 8v8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+          <div class="bai-txt">🧒 <strong>Question 1 of 2</strong><br><br>Tell me about your child — <strong>how old are they</strong> and <strong>what's been going on</strong> today? Feel free to describe it in your own words.</div>
+        </div>
+        <div class="bu">
+          <div class="bu-txt">My 4-year-old has had a high fever and won't eat anything since this morning...</div>
+        </div>
+      </div>
+      <div class="input-mock">
+        <div class="input-field">Type your message...</div>
+        <div class="send-mock"><svg width="11" height="11" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+    </div></div>
+    <div class="step-label">Step 2 — Question 1</div>
+  </div>
+
+  <div class="arrow">
+    <svg width="26" height="16" viewBox="0 0 26 16"><polygon points="0,5 16,5 16,0 26,8 16,16 16,11 0,11" fill="#2563eb"/></svg>
+  </div>
+
+  <!-- ③ Q2 -->
+  <div class="phone-wrap">
+    <div class="phone"><div class="phone-inner">
+      <div class="sbar"><span>9:41</span><span>PediAI</span><span>5G ▪▪▪</span></div>
+      <div class="abar">
+        <div class="abar-av"><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><path d="M8 12h8M12 8v8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div><div class="abar-name">PediAI Assistant</div><div class="abar-sub">● Online · Responds instantly</div></div>
+        <div class="abar-badge">AI</div>
+      </div>
+      <div class="sdots">
+        <div class="dot done"></div><div class="dot done"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+        <span class="dot-lbl">Step 3 of 5</span>
+      </div>
+      <div class="chat">
+        <div class="bai">
+          <div class="bai-av"><svg width="10" height="10" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M8 12h8M12 8v8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+          <div class="bai-txt">Got it, thanks. 📝<br><br>🔍 <strong>Question 2 of 2</strong><br><br>How long has this been going on? Any <em>temperature reading, energy or sleep changes?</em></div>
+        </div>
+        <div class="bu">
+          <div class="bu-txt">Started last night, temp is 103°F, very lethargic and crying a lot, not drinking either</div>
+        </div>
+      </div>
+      <div class="input-mock">
+        <div class="input-field">Type your message...</div>
+        <div class="send-mock"><svg width="11" height="11" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+    </div></div>
+    <div class="step-label">Step 3 — Question 2</div>
+  </div>
+
+  <div class="arrow">
+    <svg width="26" height="16" viewBox="0 0 26 16"><polygon points="0,5 16,5 16,0 26,8 16,16 16,11 0,11" fill="#2563eb"/></svg>
+  </div>
+
+  <!-- ④ Result -->
+  <div class="phone-wrap">
+    <div class="phone"><div class="phone-inner">
+      <div class="sbar"><span>9:41</span><span>PediAI</span><span>5G ▪▪▪</span></div>
+      <div class="abar">
+        <div class="abar-av"><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><path d="M8 12h8M12 8v8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div><div class="abar-name">PediAI Assistant</div><div class="abar-sub">● Online · Responds instantly</div></div>
+        <div class="abar-badge">AI</div>
+      </div>
+      <div class="sdots">
+        <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div><div class="dot"></div>
+        <span class="dot-lbl">Step 4 of 5</span>
+      </div>
+      <div class="chat">
+        <div class="bai">
+          <div class="bai-av"><svg width="10" height="10" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M8 12h8M12 8v8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+          <div class="bai-txt">Analysis complete. Here's what I found:</div>
+        </div>
+        <div class="result-card">
+          <span class="badge-u">⚠ Urgent — seek care today</span>
+          <div class="rdiag">Fever (103°F) with appetite &amp; fluid refusal</div>
+          <div class="rnote">High fever with lethargy and refusal to drink puts a 4-year-old at significant dehydration risk. Same-day care is recommended.</div>
+          <div class="chip-row">
+            <div class="chip">Confidence: 91%</div>
+            <div class="chip">Urgency: 7/10</div>
+            <div class="chip-b">🏥 Pediatrician today</div>
+          </div>
+        </div>
+      </div>
+      <div class="action-mock">
+        <div class="btn-p">See full action plan →</div>
+        <div style="font-size:7px;color:#94a3b8;text-align:center;">For informational purposes only.</div>
+      </div>
+    </div></div>
+    <div class="step-label">Step 4 — AI Result</div>
+  </div>
+
+  <div class="arrow">
+    <svg width="26" height="16" viewBox="0 0 26 16"><polygon points="0,5 16,5 16,0 26,8 16,16 16,11 0,11" fill="#2563eb"/></svg>
+  </div>
+
+  <!-- ⑤ Action Plan -->
+  <div class="phone-wrap">
+    <div class="phone"><div class="phone-inner">
+      <div class="sbar"><span>9:41</span><span>PediAI</span><span>5G ▪▪▪</span></div>
+      <div class="abar">
+        <div class="abar-av"><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><path d="M8 12h8M12 8v8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div><div class="abar-name">PediAI Assistant</div><div class="abar-sub">● Online · Responds instantly</div></div>
+        <div class="abar-badge">AI</div>
+      </div>
+      <div class="sdots">
+        <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+        <span class="dot-lbl">Step 5 of 5</span>
+      </div>
+      <div class="chat">
+        <div class="bai">
+          <div class="bai-av"><svg width="10" height="10" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M8 12h8M12 8v8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+          <div class="bai-txt">Here's your personalized action plan 👇</div>
+        </div>
+        <div class="act-s"><div class="act-num">1</div><div class="act-txt">Give Pedialyte in small, frequent sips every 5 min</div></div>
+        <div class="act-s"><div class="act-num">2</div><div class="act-txt">Administer children's Tylenol per weight-based dosing</div></div>
+        <div class="act-s"><div class="act-num">3</div><div class="act-txt">Call pediatrician or go to urgent care today</div></div>
+        <div class="notif-s">✓ Summary ready to share with your pediatrician</div>
+      </div>
+      <div class="action-mock">
+        <div class="btn-p">Share with pediatrician →</div>
+        <div class="btn-s">Book telehealth visit</div>
+      </div>
+    </div></div>
+    <div class="step-label">Step 5 — Action Plan</div>
+  </div>
+
+</div>
+
+<div class="footer-bar">
+  <span>Prof. Ateba Whitaker &nbsp;·&nbsp; Social Entrepreneurship &nbsp;·&nbsp; MGT 3074 &nbsp;·&nbsp; Virginia Tech &nbsp;·&nbsp; Spring 2026</span>
+  <span>Group 10</span>
+</div>
+
+</body>
+</html>
