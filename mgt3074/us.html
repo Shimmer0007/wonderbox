@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PediAI — Smart Pediatric Health Assistant</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #eef2f7;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 16px 48px;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.tag {
+  display: inline-block;
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.page-header p { font-size: 13px; color: #64748b; }
+
+.phone-frame {
+  width: 360px;
+  background: #0f172a;
+  border-radius: 50px;
+  padding: 12px;
+  box-shadow: 0 8px 40px rgba(15,23,42,0.25);
+}
+.phone-screen {
+  background: #fff;
+  border-radius: 38px;
+  overflow: hidden;
+  height: 680px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sbar {
+  background: #0f172a;
+  padding: 10px 22px 6px;
+  display: flex;
+  justify-content: space-between;
+  color: #94a3b8;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.abar {
+  background: #1e40af;
+  padding: 0 18px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.abar-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.abar-info { flex: 1; }
+.abar-name { color: #fff; font-size: 15px; font-weight: 700; line-height: 1.2; }
+.abar-status { color: #93c5fd; font-size: 11px; }
+.abar-badge {
+  background: #1d4ed8;
+  color: #bfdbfe;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid #3b82f6;
+}
+
+.steps-bar {
+  background: #f8fafc;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.step-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: all 0.3s;
+}
+.step-dot.active { background: #2563eb; width: 22px; border-radius: 4px; }
+.step-dot.done   { background: #2563eb; }
+.step-txt { font-size: 11px; color: #94a3b8; margin-left: auto; font-weight: 500; }
+
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8fafc;
+}
+.chat-area::-webkit-scrollbar { width: 3px; }
+.chat-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+.bubble-ai {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 88%;
+  align-self: flex-start;
+  animation: fadeUp 0.3s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.bubble-ai-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #2563eb;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.bubble-ai-txt {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px 18px 18px 4px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.bubble-user {
+  align-self: flex-end;
+  animation: fadeUp 0.3s ease;
+  max-width: 82%;
+}
+.bubble-user-txt {
+  background: #2563eb;
+  color: #fff;
+  border-radius: 18px 18px 4px 18px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.typing-bubble {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  align-self: flex-start;
+}
+.typing-dots {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 16px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.typing-dots span {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #94a3b8;
+  animation: blink 1.2s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+  40%            { opacity: 1;   transform: scale(1); }
+}
+
+.input-bar {
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.input-bar textarea {
+  flex: 1;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #1e293b;
+  resize: none;
+  height: 40px;
+  max-height: 90px;
+  font-family: inherit;
+  outline: none;
+  overflow-y: auto;
+  transition: border-color 0.2s, height 0.1s;
+  line-height: 1.4;
+}
+.input-bar textarea:focus { border-color: #2563eb; }
+.send-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.send-btn:hover { opacity: 0.88; }
+.send-btn:active { opacity: 0.75; }
+.send-btn svg { width: 17px; height: 17px; }
+
+.action-bar {
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.btn-p {
+  background: #2563eb; color: #fff;
+  border: none; border-radius: 12px;
+  padding: 12px 0; font-size: 13px; font-weight: 600;
+  cursor: pointer; width: 100%;
+  transition: opacity 0.15s;
+}
+.btn-p:hover { opacity: 0.9; }
+.btn-s {
+  background: #fff; color: #2563eb;
+  border: 1.5px solid #2563eb; border-radius: 12px;
+  padding: 10px 0; font-size: 13px; font-weight: 500;
+  cursor: pointer; width: 100%;
+  transition: background 0.15s;
+}
+.btn-s:hover { background: #eff6ff; }
+.btn-ghost {
+  background: #f8fafc; color: #94a3b8;
+  border: 1px solid #e2e8f0; border-radius: 12px;
+  padding: 9px 0; font-size: 12px;
+  cursor: pointer; width: 100%;
+}
+
+.result-card {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadeUp 0.4s ease;
+  align-self: stretch;
+  margin: 0 2px;
+}
+.result-badge-urgent {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fef2f2; color: #991b1b;
+  font-size: 12px; font-weight: 700;
+  padding: 6px 12px; border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+.result-badge-moderate {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fffbeb; color: #92400e;
+  font-size: 12px; font-weight: 700;
+  padding: 6px 12px; border-radius: 8px;
+  border: 1px solid #fde68a;
+}
+.result-badge-mild {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #f0fdf4; color: #166534;
+  font-size: 12px; font-weight: 700;
+  padding: 6px 12px; border-radius: 8px;
+  border: 1px solid #bbf7d0;
+}
+.result-diag { font-size: 14px; font-weight: 700; color: #0f172a; }
+.result-note { font-size: 12px; color: #475569; line-height: 1.6; }
+.result-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.result-chip {
+  background: #f1f5f9; border-radius: 8px;
+  padding: 5px 10px; font-size: 11px; color: #334155; font-weight: 600;
+  display: flex; align-items: center; gap: 5px;
+}
+.result-chip.blue { background: #eff6ff; color: #1e40af; }
+.result-chip.green { background: #f0fdf4; color: #166534; }
+
+.act-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.act-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #2563eb; color: #fff;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.act-txt { font-size: 12px; color: #374151; line-height: 1.5; }
+
+.notif-bar {
+  background: #f0fdf4;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 12px; color: #166534;
+  display: flex; align-items: center; gap: 8px; font-weight: 600;
+  border: 1px solid #bbf7d0;
+}
+
+.toast {
+  background: #fef3c7; color: #92400e;
+  font-size: 12px; padding: 8px 14px;
+  border-radius: 8px; text-align: center;
+  border: 1px solid #fde68a;
+  animation: fadeUp 0.3s ease;
+  margin: 0 2px;
+  align-self: stretch;
+}
+
+.progress-wrap { display: flex; flex-direction: column; gap: 8px; align-self: stretch; margin: 0 2px; }
+.prog-label { font-size: 12px; color: #64748b; font-weight: 500; }
+.prog-track { height: 7px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+.prog-fill  { height: 100%; background: #2563eb; border-radius: 4px; width: 0%; transition: width 0.6s ease; }
+
+.footer {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.7;
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="tag">MGT 3074 · Group 10 · Virginia Tech</div>
+  <h1>PediAI — US Version</h1>
+  <p>AI-powered pediatric health assistant &nbsp;·&nbsp; Interactive demo</p>
+</div>
+
+<div class="phone-frame">
+  <div class="phone-screen">
+
+    <div class="sbar">
+      <span>9:41</span>
+      <span>PediAI Health</span>
+      <span>5G ▪▪▪</span>
+    </div>
+
+    <div class="abar">
+      <div class="abar-avatar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#93c5fd"/>
+        </svg>
+      </div>
+      <div class="abar-info">
+        <div class="abar-name">PediAI Assistant</div>
+        <div class="abar-status">● Online &nbsp;·&nbsp; Responds instantly</div>
+      </div>
+      <div class="abar-badge">AI</div>
+    </div>
+
+    <div class="steps-bar" id="stepsBar">
+      <div class="step-dot active" id="sd0"></div>
+      <div class="step-dot" id="sd1"></div>
+      <div class="step-dot" id="sd2"></div>
+      <div class="step-dot" id="sd3"></div>
+      <div class="step-dot" id="sd4"></div>
+      <span class="step-txt" id="stepTxt">Step 1 of 5</span>
+    </div>
+
+    <div class="chat-area" id="chatArea"></div>
+
+    <div id="inputZone">
+      <div class="input-bar" id="inputBar" style="display:none;">
+        <textarea id="msgInput" placeholder="Type your message..." rows="1"
+          oninput="autoResize(this)"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+        <button class="send-btn" onclick="sendMsg()">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="action-bar" id="actionBar" style="display:none;"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  Prof. Ateba Whitaker &nbsp;·&nbsp; Social Entrepreneurship &nbsp;·&nbsp; MGT 3074 &nbsp;·&nbsp; Virginia Tech &nbsp;·&nbsp; Spring 2026<br>
+  Brody Scott, Jierui Zhang, Shimmer Li, Ziyao Wang, Valeria Vargas
+</div>
+
+<script>
+var STATE = { step: 0, ans1: '', ans2: '', result: null };
+
+var AI_AVATAR = '<div class="bubble-ai-avatar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><path d="M8 12h8M12 8v8" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>';
+
+function setDots(n) {
+  for (var i = 0; i < 5; i++) {
+    var d = document.getElementById('sd' + i);
+    d.className = 'step-dot' + (i < n ? ' done' : '') + (i === n ? ' active' : '');
+  }
+  document.getElementById('stepTxt').textContent = 'Step ' + (n + 1) + ' of 5';
+}
+
+function autoResize(el) {
+  el.style.height = '40px';
+  el.style.height = Math.min(el.scrollHeight, 90) + 'px';
+}
+
+function scrollBottom() {
+  var c = document.getElementById('chatArea');
+  setTimeout(function() { c.scrollTop = c.scrollHeight; }, 60);
+}
+
+function addBubbleAI(html, delay) {
+  delay = delay || 0;
+  return new Promise(function(res) {
+    setTimeout(function() {
+      var wrap = document.createElement('div');
+      wrap.className = 'bubble-ai';
+      wrap.innerHTML = AI_AVATAR + '<div class="bubble-ai-txt">' + html + '</div>';
+      document.getElementById('chatArea').appendChild(wrap);
+      scrollBottom();
+      res();
+    }, delay);
+  });
+}
+
+function addBubbleUser(text) {
+  var wrap = document.createElement('div');
+  wrap.className = 'bubble-user';
+  wrap.innerHTML = '<div class="bubble-user-txt">' + escHtml(text) + '</div>';
+  document.getElementById('chatArea').appendChild(wrap);
+  scrollBottom();
+}
+
+function addElement(el) {
+  document.getElementById('chatArea').appendChild(el);
+  scrollBottom();
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showTyping() {
+  var wrap = document.createElement('div');
+  wrap.className = 'typing-bubble';
+  wrap.id = 'typingInd';
+  wrap.innerHTML = AI_AVATAR + '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  document.getElementById('chatArea').appendChild(wrap);
+  scrollBottom();
+}
+
+function hideTyping() {
+  var t = document.getElementById('typingInd');
+  if (t) t.remove();
+}
+
+function showInput(placeholder) {
+  var ib = document.getElementById('inputBar');
+  var ab = document.getElementById('actionBar');
+  ib.style.display = 'flex';
+  ab.style.display = 'none';
+  var ta = document.getElementById('msgInput');
+  ta.value = '';
+  ta.style.height = '40px';
+  ta.placeholder = placeholder || 'Type your message...';
+  setTimeout(function() { ta.focus(); }, 200);
+}
+
+function hideInput() {
+  document.getElementById('inputBar').style.display = 'none';
+}
+
+function showActionBar(html) {
+  var ab = document.getElementById('actionBar');
+  document.getElementById('inputBar').style.display = 'none';
+  ab.style.display = 'flex';
+  ab.innerHTML = html;
+}
+
+function sendMsg() {
+  var ta = document.getElementById('msgInput');
+  var val = ta.value.trim();
+  if (!val) return;
+  hideInput();
+  addBubbleUser(val);
+
+  if (STATE.step === 1) {
+    STATE.ans1 = val;
+    STATE.step = 2;
+    setDots(2);
+    step2Reply();
+  } else if (STATE.step === 2) {
+    STATE.ans2 = val;
+    STATE.step = 3;
+    setDots(3);
+    startAnalysis();
+  }
+}
+
+function step0() {
+  setDots(0);
+  showTyping();
+  setTimeout(function() {
+    hideTyping();
+    addBubbleAI("👋 Hi there! I'm <strong>PediAI</strong>, your AI-powered pediatric health assistant.<br><br>I'm here to help you quickly understand what might be going on with your child and what steps to take next.", 0);
+  }, 1100);
+  setTimeout(function() {
+    showTyping();
+  }, 2000);
+  setTimeout(function() {
+    hideTyping();
+    addBubbleAI("To get started, I'll ask you <strong>two quick questions</strong> — then I'll analyze the situation and give you personalized guidance. Ready?");
+    showActionBar('<button class="btn-p" onclick="step1Start()">Yes, let\'s go &#8594;</button>');
+  }, 3400);
+}
+
+function step1Start() {
+  STATE.step = 1;
+  setDots(1);
+  showActionBar('');
+  document.getElementById('actionBar').style.display = 'none';
+  showTyping();
+  setTimeout(function() {
+    hideTyping();
+    addBubbleAI("🧒 <strong>Question 1 of 2</strong><br><br>Tell me about your child — <strong>how old are they</strong>, and <strong>what's been going on</strong> today? Feel free to describe it in your own words.");
+    showInput("e.g. My 4-year-old has a high fever and won't eat anything...");
+  }, 1200);
+}
+
+function step2Reply() {
+  showTyping();
+  setTimeout(function() {
+    hideTyping();
+    addBubbleAI("Got it, thanks for sharing that. 📝");
+  }, 900);
+  setTimeout(function() {
+    showTyping();
+  }, 1500);
+  setTimeout(function() {
+    hideTyping();
+    addBubbleAI("🔍 <strong>Question 2 of 2</strong><br><br>One more thing — <strong>how long has this been going on</strong>? And have you noticed anything else, like a <em>specific temperature reading, changes in energy level, sleeping patterns, or any other symptoms</em>?");
+    showInput("e.g. Started yesterday, temp is 102°F, really lethargic and crying a lot...");
+  }, 2800);
+}
+
+function startAnalysis() {
+  setDots(3);
+  showTyping();
+  setTimeout(function() {
+    hideTyping();
+    addBubbleAI("Perfect. I have everything I need. Running my analysis now — this takes just a few seconds. 🔬");
+  }, 900);
+
+  setTimeout(function() {
+    var pw = document.createElement('div');
+    pw.className = 'progress-wrap';
+    var msgs = ['Reading symptom profile...', 'Cross-referencing clinical patterns...', 'Calculating urgency score...', 'Generating recommendations...'];
+    var steps = [15, 42, 72, 98];
+    pw.innerHTML = '<div class="prog-label" id="progMsg">Reading symptom profile...</div>'
+      + '<div class="prog-track"><div class="prog-fill" id="progFill"></div></div>';
+    addElement(pw);
+    scrollBottom();
+
+    var i = 0;
+    function tick() {
+      var pf = document.getElementById('progFill');
+      var pm = document.getElementById('progMsg');
+      if (!pf) return;
+      pf.style.width = steps[i] + '%';
+      if (pm) pm.textContent = msgs[i];
+      i++;
+      if (i < steps.length) setTimeout(tick, 900);
+      else setTimeout(showResult, 700);
+    }
+    setTimeout(tick, 300);
+  }, 2000);
+}
+
+function analyse() {
+  var t1 = (STATE.ans1 || '').toLowerCase();
+  var t2 = (STATE.ans2 || '').toLowerCase();
+  var t  = t1 + ' ' + t2;
+
+  var Fv  = /fever|temp|hot|fire|chaud|\b10[0-9](\.\d)?\b|\b38\b|\b39\b|\b40\b|degrees/.test(t);
+  var Ne  = /eat|appetite|food|hungry|refuse|won.t eat|not eating|not eat|no appetite/.test(t);
+  var Di  = /diarrhea|diarrh|loose stool|stomach|belly/.test(t);
+  var Vo  = /vomit|throw up|sick to|nauseous/.test(t);
+  var Ra  = /rash|spot|skin|itch|hive/.test(t);
+  var Co  = /cough|breath|wheez|congestion|runny nose|cold/.test(t);
+  var Le  = /letharg|tired|weak|energy|sleepy|sluggish|crying|cranky|fuss/.test(t);
+  var Du  = /yesterday|day|hour|week|two day|48|24|3 day|few day|since/.test(t);
+  var Tm  = t.match(/\b(10[0-9]|38|39|40)(\.\d)?\b/);
+  var tv  = Tm ? Tm[0] : null;
+
+  var age = t.match(/(\d+)[\s-]*(year|yr|month|mo)/);
+  var ageStr = age ? age[0] : null;
+
+  var r;
+  if (Fv && Ne && (Di || Vo)) {
+    r = { sev:'urgent', badge:'Urgent — seek care today',
+      diag: 'Acute gastroenteritis with fever' + (tv ? ' (' + tv + '°)' : ''),
+      note: 'The combination of high fever, vomiting or diarrhea, and refusal to eat puts your child at significant dehydration risk' + (ageStr ? ', especially at age ' + ageStr : '') + '. This pattern warrants a same-day pediatric visit.',
+      conf: 93, urg: 8,
+      specialist: 'Pediatrician (same-day)',
+      tips: ['Use Pedialyte or ORS — not plain water', 'Track wet diapers as a hydration sign'],
+      acts: ['Give oral rehydration solution (Pedialyte) in small, frequent sips',
+             'Do NOT give anti-diarrhea medications to children without doctor guidance',
+             'Monitor for signs of dehydration: dry mouth, no tears, no wet diaper in 6+ hrs',
+             'Call your pediatrician or go to urgent care today',
+             'Bring a list of symptoms and when they started'] };
+  } else if (Fv && Ne) {
+    r = { sev: tv && parseFloat(tv) >= 103 ? 'urgent' : 'moderate',
+      badge: tv && parseFloat(tv) >= 103 ? 'Urgent — high fever' : 'Moderate — monitor closely',
+      diag: tv ? 'Fever (' + tv + '°F) with appetite loss' : 'Fever with appetite suppression',
+      note: 'Fever combined with refusing to eat is a common pattern in viral illness. ' + (tv && parseFloat(tv) >= 103 ? 'A temperature of ' + tv + '°F is on the high end for a child and warrants medical attention.' : 'Continue monitoring closely and follow up if fever persists beyond 48–72 hours.'),
+      conf: 88, urg: tv && parseFloat(tv) >= 103 ? 6 : 4,
+      specialist: tv && parseFloat(tv) >= 103 ? 'Pediatrician (today)' : 'Telehealth / wait & watch',
+      tips: ['Give age-appropriate acetaminophen or ibuprofen', 'Fluids are more important than food right now'],
+      acts: ['Administer children\'s acetaminophen or ibuprofen per package weight-based dosing',
+             'Offer cool liquids frequently — popsicles, diluted juice, or ORS',
+             'Take temperature every 4 hours and keep a log',
+             tv && parseFloat(tv) >= 103 ? 'Call your pediatrician today — this temp level needs to be assessed' : 'Schedule a telehealth appointment if no improvement in 24 hours',
+             'Keep child comfortable and resting — don\'t force eating'] };
+  } else if (Fv && Di) {
+    r = { sev:'urgent', badge:'Urgent — dehydration risk',
+      diag: 'Viral gastroenteritis with fever',
+      note: 'Fever paired with diarrhea in children can lead to rapid dehydration. Younger children are at greatest risk.',
+      conf: 90, urg: 7,
+      specialist: 'Pediatrician (same-day)',
+      tips: ['ORS is the #1 treatment — not sports drinks', 'BRAT diet when appetite returns'],
+      acts: ['Begin Pedialyte or ORS immediately — avoid sugary drinks',
+             'Offer 1–2 teaspoons every 5 minutes if vomiting occurs',
+             'Continue breastfeeding if child is under 12 months',
+             'Contact pediatrician if diarrhea lasts more than 2 days or blood appears',
+             'Head to urgent care or ER if child becomes very drowsy or unresponsive'] };
+  } else if (Fv) {
+    r = { sev: tv && parseFloat(tv) >= 104 ? 'urgent' : 'moderate',
+      badge: tv && parseFloat(tv) >= 104 ? 'Urgent — very high fever' : 'Moderate — manageable at home',
+      diag: tv ? 'Fever at ' + tv + '°F — likely viral infection' : 'Fever — likely viral origin',
+      note: 'Most fevers in children are caused by viral infections and resolve within 3–5 days. ' + (Le ? 'The lethargy you mentioned is worth watching closely. ' : '') + (Du ? 'Duration matters — escalate if fever persists beyond 72 hours.' : ''),
+      conf: 85, urg: tv && parseFloat(tv) >= 104 ? 6 : 3,
+      specialist: tv && parseFloat(tv) >= 104 ? 'Pediatrician (today)' : 'Telehealth if not improving',
+      tips: ['Fever itself isn\'t dangerous — discomfort is the issue', 'Dress child lightly; avoid over-bundling'],
+      acts: ['Give weight-appropriate dose of children\'s acetaminophen (Tylenol) or ibuprofen (Motrin)',
+             'Encourage clear fluids — water, diluted apple juice, popsicles',
+             'Monitor temperature every 4–6 hours',
+             tv && parseFloat(tv) >= 104 ? 'Call pediatrician immediately — temp above 104°F needs assessment' : 'Telehealth visit if fever continues past 48–72 hours',
+             'Return to normal activity once fever-free for 24 hours without medication'] };
+  } else if (Co) {
+    r = { sev:'mild', badge:'Mild — supportive care',
+      diag: 'Upper respiratory infection — possible cold or RSV',
+      note: 'Cough and congestion are extremely common in children and usually resolve within 7–10 days with supportive care. No antibiotics needed for viral illness.',
+      conf: 82, urg: 2,
+      specialist: 'Telehealth if no improvement in 5 days',
+      tips: ['Humidifier in bedroom can ease symptoms', 'Honey (1 tsp) for cough — only if child is over 1 year'],
+      acts: ['Run a cool-mist humidifier in the child\'s room at night',
+             'Use saline nasal spray and bulb syringe for congestion',
+             'Elevate head of mattress slightly for comfort (not for infants)',
+             'Avoid OTC cough medicines for children under 6 — they are not recommended by the AAP',
+             'See a doctor if cough worsens, breathing is labored, or fever develops'] };
+  } else if (Ra) {
+    r = { sev:'moderate', badge:'Moderate — see doctor to confirm',
+      diag: 'Unidentified rash — rule out allergic reaction or infection',
+      note: 'Rashes in children have many causes, from harmless heat rash to conditions like roseola or allergic reactions. A visual exam by a clinician is the most reliable next step.',
+      conf: 79, urg: 3,
+      specialist: 'Pediatrician or Dermatologist',
+      tips: ['Photo the rash now — it may look different later', 'Note any new foods, soaps, or exposures in the past 48 hrs'],
+      acts: ['Do not scratch or apply unknown creams to the rash',
+             'Take clear photos of the rash for your doctor',
+             'Note any other symptoms (fever, swelling, difficulty breathing)',
+             'If rash spreads rapidly or child seems unwell, go to urgent care today',
+             'Schedule an in-person or telehealth visit within 24 hours for proper diagnosis'] };
+  } else {
+    r = { sev:'mild', badge:'Mild — observation recommended',
+      diag: 'No high-risk symptoms identified',
+      note: 'Based on what you\'ve shared, your child\'s symptoms don\'t indicate an immediate emergency. Continue monitoring and don\'t hesitate to reach out to your pediatrician if you remain concerned.',
+      conf: 74, urg: 2,
+      specialist: 'Telehealth if concerned',
+      tips: ['Trust your instincts — you know your child best', 'Document symptoms to share with your doctor'],
+      acts: ['Keep your child comfortable, hydrated, and resting',
+             'Log any new symptoms as they develop',
+             'Check temperature twice daily',
+             'Use your pediatrician\'s after-hours nurse line if symptoms worsen overnight',
+             'Schedule a routine appointment if symptoms persist more than 3 days'] };
+  }
+  STATE.result = r;
+}
+
+function showResult() {
+  analyse();
+  var r = STATE.result;
+  setDots(3);
+
+  var badgeClass = r.sev === 'urgent' ? 'result-badge-urgent' : r.sev === 'moderate' ? 'result-badge-moderate' : 'result-badge-mild';
+  var icon = r.sev === 'urgent' ? '⚠' : r.sev === 'moderate' ? '●' : '✓';
+
+  showTyping();
+  setTimeout(function() {
+    hideTyping();
+    addBubbleAI("Analysis complete. Here's what I found:");
+
+    var card = document.createElement('div');
+    card.className = 'result-card';
+    card.innerHTML = '<span class="' + badgeClass + '">' + icon + ' ' + r.badge + '</span>'
+      + '<div class="result-diag">' + r.diag + '</div>'
+      + '<div class="result-note">' + r.note + '</div>'
+      + '<div class="result-row">'
+      +   '<div class="result-chip">Confidence: <strong>' + r.conf + '%</strong></div>'
+      +   '<div class="result-chip">Urgency: <strong>' + r.urg + '/10</strong></div>'
+      +   '<div class="result-chip blue">&#x1F3E5; ' + r.specialist + '</div>'
+      + '</div>';
+    addElement(card);
+
+    showActionBar('<button class="btn-p" onclick="showPlan()">See full action plan &#8594;</button>'
+      + '<p style="font-size:10px;color:#94a3b8;text-align:center;padding:2px 0;">For informational purposes only. Not a medical diagnosis.</p>');
+    setDots(3);
+  }, 800);
+}
+
+function showPlan() {
+  setDots(4);
+  var r = STATE.result;
+  var acts = r.acts.map(function(a, i) {
+    return '<div class="act-item"><div class="act-num">' + (i+1) + '</div><div class="act-txt">' + a + '</div></div>';
+  }).join('');
+  var tips = r.tips.map(function(t) {
+    return '<div class="result-chip green" style="font-size:11px;padding:5px 10px;">&#9679; ' + t + '</div>';
+  }).join('');
+
+  showTyping();
+  setTimeout(function() {
+    hideTyping();
+    addBubbleAI("Here's your personalized action plan — and a couple of quick tips that often get overlooked. 👇");
+
+    var pc = document.createElement('div');
+    pc.style.cssText = 'display:flex;flex-direction:column;gap:7px;align-self:stretch;margin:0 2px;animation:fadeUp 0.4s ease;';
+    pc.innerHTML = acts;
+    addElement(pc);
+
+    var tc = document.createElement('div');
+    tc.style.cssText = 'display:flex;flex-direction:column;gap:6px;align-self:stretch;margin:0 2px;animation:fadeUp 0.4s ease;';
+    tc.innerHTML = '<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Quick tips</div>' + tips;
+    addElement(tc);
+
+    var nb = document.createElement('div');
+    nb.className = 'notif-bar';
+    nb.innerHTML = '&#10003;&nbsp; Summary ready to share with your pediatrician';
+    addElement(nb);
+
+    showActionBar(
+      '<button class="btn-p" onclick="showToast(\'share\')">Share with pediatrician &#8594;</button>'
+      + '<button class="btn-s" onclick="showToast(\'book\')">Book a telehealth visit</button>'
+      + '<button class="btn-ghost" onclick="resetApp()">Start over</button>'
+    );
+    scrollBottom();
+  }, 900);
+}
+
+function showToast(type) {
+  var msgs = {
+    share: 'Generating PDF summary for your pediatrician...',
+    book:  'Opening telehealth booking — connecting to available providers...'
+  };
+  var old = document.querySelector('.toast');
+  if (old) old.remove();
+  var el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msgs[type] || '';
+  var ab = document.getElementById('actionBar');
+  ab.insertBefore(el, ab.firstChild);
+  setTimeout(function() { if (el.parentNode) el.remove(); }, 3000);
+}
+
+function resetApp() {
+  STATE = { step: 0, ans1: '', ans2: '', result: null };
+  document.getElementById('chatArea').innerHTML = '';
+  document.getElementById('actionBar').style.display = 'none';
+  document.getElementById('inputBar').style.display = 'none';
+  setDots(0);
+  step0();
+}
+
+step0();
+</script>
+</body>
+</html>

@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KidCare Haiti — Interactive Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f4f2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 48px;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 6px;
+  }
+  .page-header p {
+    font-size: 13px;
+    color: #6b7280;
+  }
+  .tag {
+    display: inline-block;
+    background: #e8f7f2;
+    color: #065f46;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Phone frame */
+  .phone-frame {
+    width: 340px;
+    background: #111827;
+    border-radius: 48px;
+    padding: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+  }
+  .phone-screen {
+    background: #f0f4f2;
+    border-radius: 36px;
+    overflow: hidden;
+    height: 640px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .sbar {
+    background: #111827;
+    padding: 10px 22px 6px;
+    display: flex;
+    justify-content: space-between;
+    color: #9ca3af;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  /* App bar */
+  .abar {
+    background: #1D9E75;
+    padding: 13px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .abar-t {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    flex: 1;
+  }
+  .back-btn {
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+    display: none;
+    padding: 0 4px;
+    user-select: none;
+  }
+
+  /* Step dots */
+  .dots-bar {
+    background: #fff;
+    padding: 9px 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    border-bottom: 0.5px solid #e5e7eb;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #d1d5db;
+    transition: all 0.3s ease;
+  }
+  .dot.active { background: #1D9E75; width: 22px; border-radius: 4px; }
+  .dot.done   { background: #1D9E75; }
+  .step-lbl { font-size: 11px; color: #9ca3af; margin-left: auto; }
+
+  /* Content area */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .content::-webkit-scrollbar { width: 3px; }
+  .content::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+  /* Typography */
+  .h1 { font-size: 17px; font-weight: 700; color: #111827; }
+  .h2 { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.7px; }
+  .body-t { font-size: 12px; color: #6b7280; line-height: 1.5; }
+  .spacer { flex: 1; min-height: 8px; }
+
+  /* Buttons */
+  .btn-p {
+    background: #1D9E75; color: #fff;
+    border: none; border-radius: 12px;
+    padding: 13px 0; font-size: 14px; font-weight: 600;
+    cursor: pointer; width: 100%; flex-shrink: 0;
+    transition: opacity 0.15s;
+  }
+  .btn-p:hover { opacity: 0.9; }
+  .btn-p:active { opacity: 0.8; }
+  .btn-s {
+    background: #fff; color: #1D9E75;
+    border: 1.5px solid #1D9E75; border-radius: 12px;
+    padding: 11px 0; font-size: 13px; font-weight: 500;
+    cursor: pointer; width: 100%; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .btn-s:hover { background: #e8f7f2; }
+  .btn-ghost {
+    background: #fff; color: #9ca3af;
+    border: 1px solid #e5e7eb; border-radius: 12px;
+    padding: 11px 0; font-size: 12px;
+    cursor: pointer; width: 100%; flex-shrink: 0;
+  }
+  .btn-ghost:hover { background: #f9fafb; }
+
+  /* Language options */
+  .lang-opt {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 16px;
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer; font-size: 14px; color: #374151;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .lang-opt:hover { border-color: #9FE1CB; }
+  .lang-opt.sel { border-color: #1D9E75; background: #e8f7f2; color: #065f46; font-weight: 600; }
+  .flag-badge {
+    width: 30px; height: 22px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .check-mark { margin-left: auto; color: #1D9E75; font-size: 16px; font-weight: 700; }
+
+  /* Age pills */
+  .age-row { display: flex; gap: 8px; }
+  .age-pill {
+    flex: 1; padding: 10px 4px;
+    text-align: center;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 13px; color: #6b7280;
+    cursor: pointer; background: #fff;
+    transition: all 0.2s; user-select: none;
+  }
+  .age-pill:hover { border-color: #9FE1CB; }
+  .age-pill.sel { background: #1D9E75; border-color: #1D9E75; color: #fff; font-weight: 600; }
+
+  /* Checkboxes */
+  .cb-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .cb-item:hover { border-color: #9FE1CB; }
+  .cb-item.on { border-color: #1D9E75; background: #e8f7f2; }
+  .cb-box {
+    width: 18px; height: 18px;
+    border: 1.5px solid #9ca3af;
+    border-radius: 5px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #fff; background: #fff;
+    transition: all 0.2s;
+  }
+  .cb-box.on { background: #1D9E75; border-color: #1D9E75; }
+  .cb-lbl { font-size: 13px; color: #374151; }
+
+  /* Textarea */
+  .ta {
+    width: 100%;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 13px; color: #374151;
+    resize: none; height: 80px;
+    background: #fff;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .ta:focus { border-color: #1D9E75; }
+
+  /* Divider */
+  .div { height: 0.5px; background: #e5e7eb; flex-shrink: 0; }
+
+  /* Scan screen */
+  .scan-c {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 16px;
+    flex: 1; justify-content: center; padding: 16px 0;
+  }
+  @keyframes rot {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  .spin { animation: rot 4s linear infinite; display: block; transform-origin: 50% 50%; }
+
+  .prog-track {
+    width: 100%; height: 8px;
+    background: #e5e7eb; border-radius: 4px; overflow: hidden;
+  }
+  .prog-fill {
+    height: 100%; background: #1D9E75;
+    border-radius: 4px; width: 0%;
+    transition: width 0.5s ease;
+  }
+  .scan-msg { font-size: 13px; color: #6b7280; text-align: center; min-height: 20px; }
+  .scan-tag {
+    background: #e8f7f2; color: #0F6E56;
+    font-size: 12px; padding: 6px 14px;
+    border-radius: 20px; font-weight: 600;
+  }
+
+  /* Result badges */
+  .badge-u { background: #fff1f2; color: #9f1239; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 7px; }
+  .badge-m { background: #fffbeb; color: #92400e; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 7px; }
+  .badge-s { background: #e8f7f2; color: #065f46; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 7px; }
+
+  /* Result card */
+  .r-card {
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .r-diag { font-size: 15px; font-weight: 700; color: #111827; }
+  .r-note { font-size: 12px; color: #6b7280; line-height: 1.6; }
+  .conf-row { display: flex; align-items: center; gap: 12px; }
+  .conf-val { font-size: 14px; font-weight: 700; color: #1D9E75; }
+  .urg-chip {
+    background: #f3f4f6; border-radius: 8px;
+    padding: 6px 12px; font-size: 12px; color: #374151; font-weight: 600;
+  }
+
+  /* Action items */
+  .act-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+  }
+  .act-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #1D9E75; color: #fff;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .act-txt { font-size: 13px; color: #374151; line-height: 1.5; }
+
+  /* Notification bar */
+  .notif {
+    background: #e8f7f2; border-radius: 10px;
+    padding: 10px 14px; font-size: 13px; color: #065f46;
+    display: flex; align-items: center; gap: 10px; font-weight: 600;
+  }
+
+  /* Toast */
+  .toast {
+    background: #fef3c7; color: #92400e;
+    font-size: 12px; padding: 8px 14px;
+    border-radius: 8px; text-align: center;
+    border: 1px solid #fde68a;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+  /* Hibiscus center label */
+  .hibi-label {
+    font-size: 11px; color: #9ca3af;
+    text-align: center; letter-spacing: 0.5px;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 11px;
+    color: #9ca3af;
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="tag">MGT 3074 · Group 10 · Virginia Tech</div>
+  <h1>KidCare Haiti</h1>
+  <p>Interactive app demo &nbsp;·&nbsp; Child health screening for mothers (ages 0–12)</p>
+</div>
+
+<div class="phone-frame">
+  <div class="phone-screen">
+    <div class="sbar">
+      <span>9:41</span>
+      <span>KidCare Haiti</span>
+      <span>2G ▪▪▪</span>
+    </div>
+    <div class="abar" id="abar">
+      <span class="back-btn" id="backBtn" onclick="goBack()">&#8592;</span>
+      <span class="abar-t" id="abarT">KidCare Haiti</span>
+    </div>
+    <div class="dots-bar" id="dotsBar">
+      <div class="dot active" id="dot0"></div>
+      <div class="dot" id="dot1"></div>
+      <div class="dot" id="dot2"></div>
+      <div class="dot" id="dot3"></div>
+      <div class="dot" id="dot4"></div>
+      <span class="step-lbl" id="stepLbl">Step 1 of 5</span>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div class="footer">
+  Prof. Ateba Whitaker &nbsp;·&nbsp; Social Entrepreneurship &nbsp;·&nbsp; Spring 2026<br>
+  Brody Scott, Jierui Zhang, Shimmer Li, Ziyao Wang, Valeria Vargas
+</div>
+
+<script>
+var S = { lang: 'english', age: '2-5', checks: {}, text: '', result: null };
+
+var TXT = {
+  english: {
+    start: 'Get started', analyze: 'Analyze symptoms',
+    seeplan: 'See action plan', call: 'Call health worker',
+    share: 'Share via WhatsApp', restart: 'Start over',
+    ph: "e.g. Don't want to eat and get fire about 38, started 2 days ago...",
+    age: 'Age group', syms: 'Symptoms',
+    details: 'Describe in your own words (optional)',
+    scanning: 'AI Scanning...', result: 'Diagnosis result',
+    plan: 'Care action plan', notif: 'Health worker has been notified',
+    disclaimer: 'Screening tool only. Always follow up with a health professional.',
+    call_msg: 'Connecting to nearest health worker...',
+    wa_msg: 'Opening WhatsApp with your child\'s report...'
+  },
+  kreyol: {
+    start: 'Kòmanse', analyze: 'Analize sentòm',
+    seeplan: 'Wè plan an', call: 'Rele travayè sante',
+    share: 'Pataje WhatsApp', restart: 'Recommanse',
+    ph: "Pa egzanp: pa vle manje epi li gen lafyèv 38, sa kòmanse 2 jou...",
+    age: 'Gwoup laj', syms: 'Sentòm',
+    details: 'Dekri nan pwòp mo ou (opsyonèl)',
+    scanning: 'AI ap analize...', result: 'Rezilta dyagnoz',
+    plan: 'Plan pran swen', notif: 'Travayè sante a te avize',
+    disclaimer: 'Zouti depistaj sèlman. Toujou swiv avèk yon pwofesyonèl sante.',
+    call_msg: 'Ap konekte ak travayè sante ki pi pre...',
+    wa_msg: 'Ap ouvri WhatsApp ak rapò pitit ou...'
+  },
+  french: {
+    start: 'Commencer', analyze: 'Analyser les symptômes',
+    seeplan: 'Voir le plan de soins', call: "Appeler l'agent de santé",
+    share: 'Partager via WhatsApp', restart: 'Recommencer',
+    ph: "ex: ne veut pas manger et a de la fièvre à 38°C, depuis 2 jours...",
+    age: "Groupe d'âge", syms: 'Symptômes',
+    details: 'Décrivez avec vos propres mots (facultatif)',
+    scanning: 'Analyse IA...', result: 'Résultat du diagnostic',
+    plan: 'Plan de soins', notif: "L'agent de santé a été notifié",
+    disclaimer: 'Outil de dépistage uniquement. Consultez toujours un professionnel de santé.',
+    call_msg: "Connexion à l'agent de santé le plus proche...",
+    wa_msg: "Ouverture de WhatsApp avec le rapport de votre enfant..."
+  }
+};
+function L() { return TXT[S.lang] || TXT.english; }
+
+var SYMS = [
+  { k: 'fever',     en: 'Fever',                    kr: 'Lafyèv',              fr: 'Fièvre' },
+  { k: 'notEating', en: 'Not eating / poor appetite',kr: 'Pa vle manje',        fr: "Perte d'appétit" },
+  { k: 'diarrhea',  en: 'Diarrhea',                 kr: 'Dyare',               fr: 'Diarrhée' },
+  { k: 'vomiting',  en: 'Vomiting',                 kr: 'Vòmi',                fr: 'Vomissements' },
+  { k: 'rash',      en: 'Rash / skin spots',         kr: 'Gratèl / bouton',     fr: 'Éruption cutanée' },
+  { k: 'cough',     en: 'Cough / breathing trouble', kr: 'Tous / difikilte respire', fr: 'Toux / difficultés respiratoires' }
+];
+
+function symLabel(s) {
+  if (S.lang === 'kreyol') return s.kr;
+  if (S.lang === 'french') return s.fr;
+  return s.en;
+}
+
+function hibiSVG(sz, spin) {
+  var c = spin ? 'spin' : '';
+  return '<svg class="' + c + '" width="' + sz + '" height="' + sz + '" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+    + '<g transform="translate(50,50)">'
+    + '<ellipse cx="0" cy="-23" rx="13" ry="22" fill="#e8395a" transform="rotate(0)"   opacity="0.9"/>'
+    + '<ellipse cx="0" cy="-23" rx="13" ry="22" fill="#d42f52" transform="rotate(72)"  opacity="0.9"/>'
+    + '<ellipse cx="0" cy="-23" rx="13" ry="22" fill="#e8395a" transform="rotate(144)" opacity="0.9"/>'
+    + '<ellipse cx="0" cy="-23" rx="13" ry="22" fill="#d42f52" transform="rotate(216)" opacity="0.9"/>'
+    + '<ellipse cx="0" cy="-23" rx="13" ry="22" fill="#e8395a" transform="rotate(288)" opacity="0.9"/>'
+    + '<line x1="0" y1="-8" x2="0" y2="-40" stroke="#b01e43" stroke-width="1" transform="rotate(0)"   opacity="0.35"/>'
+    + '<line x1="0" y1="-8" x2="0" y2="-40" stroke="#b01e43" stroke-width="1" transform="rotate(72)"  opacity="0.35"/>'
+    + '<line x1="0" y1="-8" x2="0" y2="-40" stroke="#b01e43" stroke-width="1" transform="rotate(144)" opacity="0.35"/>'
+    + '<line x1="0" y1="-8" x2="0" y2="-40" stroke="#b01e43" stroke-width="1" transform="rotate(216)" opacity="0.35"/>'
+    + '<line x1="0" y1="-8" x2="0" y2="-40" stroke="#b01e43" stroke-width="1" transform="rotate(288)" opacity="0.35"/>'
+    + '<circle cx="0" cy="0" r="11" fill="#f7c948"/>'
+    + '<rect x="-3" y="-16" width="6" height="16" rx="3" fill="#e8a800"/>'
+    + '<circle cx="0"  cy="-16" r="3.2" fill="#f7c948"/>'
+    + '<circle cx="-5" cy="-14" r="2.4" fill="#f7c948"/>'
+    + '<circle cx="5"  cy="-14" r="2.4" fill="#f7c948"/>'
+    + '<circle cx="-6" cy="-9"  r="2"   fill="#f7c948"/>'
+    + '<circle cx="6"  cy="-9"  r="2"   fill="#f7c948"/>'
+    + '<circle cx="0"  cy="0"   r="6"   fill="#c0234a"/>'
+    + '</g>'
+    + '<ellipse cx="19" cy="86" rx="9" ry="5" fill="#1D9E75" transform="rotate(-38 19 86)"/>'
+    + '<ellipse cx="81" cy="86" rx="9" ry="5" fill="#1D9E75" transform="rotate(38 81 86)"/>'
+    + '</svg>';
+}
+
+function setDots(n) {
+  for (var i = 0; i < 5; i++) {
+    var d = document.getElementById('dot' + i);
+    d.className = 'dot' + (i < n ? ' done' : '') + (i === n ? ' active' : '');
+  }
+  document.getElementById('stepLbl').textContent = 'Step ' + (n + 1) + ' of 5';
+  document.getElementById('backBtn').style.display = (n === 1) ? 'block' : 'none';
+}
+
+function go(n) {
+  var titles = { 0: 'KidCare Haiti', 1: 'Child info', 2: 'Analyzing...', 3: 'Result', 4: 'Action plan' };
+  document.getElementById('abarT').textContent = titles[n] || 'KidCare Haiti';
+  setDots(n);
+  var fns = [s1, s2, s3, s4, s5];
+  document.getElementById('content').innerHTML = fns[n]();
+  if (n === 2) scan();
+}
+
+function goBack() { go(1); }
+
+/* ── Screen 1: Language ── */
+function s1() {
+  var langs = [
+    { k: 'kreyol',  label: 'Kreyòl Ayisyen', code: 'HT', bg: '#003087' },
+    { k: 'english', label: 'English',         code: 'EN', bg: '#0033a0' },
+    { k: 'french',  label: 'Français',        code: 'FR', bg: '#002395' }
+  ];
+  var list = langs.map(function(l) {
+    var sel = S.lang === l.k;
+    return '<div class="lang-opt' + (sel ? ' sel' : '') + '" onclick="selL(\'' + l.k + '\')">'
+      + '<div class="flag-badge" style="background:' + l.bg + ';">' + l.code + '</div>'
+      + '<span>' + l.label + '</span>'
+      + (sel ? '<span class="check-mark">&#10003;</span>' : '')
+      + '</div>';
+  }).join('');
+  return '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 0 4px;">'
+    + hibiSVG(72, false)
+    + '<div class="h1" style="text-align:center;">Bon Jwenn, Manman!</div>'
+    + '<div class="body-t" style="text-align:center;">Choose your language</div>'
+    + '</div>'
+    + list
+    + '<div class="spacer"></div>'
+    + '<div class="body-t" style="text-align:center;font-size:11px;color:#9ca3af;">No login required &nbsp;·&nbsp; Free &nbsp;·&nbsp; Works offline</div>'
+    + '<button class="btn-p" onclick="go(1)">' + L().start + ' &#8594;</button>';
+}
+function selL(l) { S.lang = l; go(0); }
+
+/* ── Screen 2: Child info ── */
+function s2() {
+  var ages = ['0–1', '2–5', '6–12'].map(function(a) {
+    return '<div class="age-pill' + (S.age === a ? ' sel' : '') + '" onclick="selA(\'' + a + '\')">' + a + '</div>';
+  }).join('');
+  var cbs = SYMS.map(function(s) {
+    var on = S.checks[s.k];
+    return '<div class="cb-item' + (on ? ' on' : '') + '" onclick="tog(\'' + s.k + '\')">'
+      + '<div class="cb-box' + (on ? ' on' : '') + '">' + (on ? '&#10003;' : '') + '</div>'
+      + '<span class="cb-lbl">' + symLabel(s) + '</span>'
+      + '</div>';
+  }).join('');
+  return '<div class="h2">' + L().age + '</div>'
+    + '<div class="age-row">' + ages + '</div>'
+    + '<div class="div"></div>'
+    + '<div class="h2">' + L().syms + '</div>'
+    + cbs
+    + '<div class="div"></div>'
+    + '<div class="h2">' + L().details + '</div>'
+    + '<textarea class="ta" id="ta" placeholder="' + L().ph + '" oninput="S.text=this.value">' + S.text + '</textarea>'
+    + '<button class="btn-p" onclick="doAna()">' + L().analyze + ' &#8594;</button>';
+}
+function selA(a) { S.age = a; go(1); }
+function tog(k) { S.checks[k] = !S.checks[k]; go(1); }
+function doAna() {
+  var t = document.getElementById('ta');
+  if (t) S.text = t.value;
+  analyse();
+  go(2);
+}
+
+/* ── Screen 3: Scanning ── */
+var SCAN_MSGS = {
+  english: ['Reading age group & inputs...', 'Matching symptom patterns...', 'Calculating urgency score...', 'Generating recommendations...'],
+  kreyol:  ['Ap li gwoup laj...', 'Ap matche sentòm yo...', 'Ap kalkile ijan...', 'Ap fè rekòmandasyon...'],
+  french:  ["Lecture du groupe d'âge...", 'Correspondance des symptômes...', "Calcul du score d'urgence...", 'Génération des recommandations...']
+};
+function s3() {
+  return '<div class="scan-c">'
+    + hibiSVG(86, true)
+    + '<div class="hibi-label">Haiti national flower</div>'
+    + '<div class="h1" style="text-align:center;">' + L().scanning + '</div>'
+    + '<div style="width:100%;"><div class="prog-track"><div class="prog-fill" id="pf"></div></div></div>'
+    + '<div class="scan-msg" id="smsg">Starting analysis...</div>'
+    + '<div class="scan-tag">Works on 2G &nbsp;·&nbsp; No login needed</div>'
+    + '</div>';
+}
+function scan() {
+  var msgs = SCAN_MSGS[S.lang] || SCAN_MSGS.english;
+  var steps = [18, 45, 72, 96];
+  var i = 0;
+  function tick() {
+    var pf = document.getElementById('pf');
+    var sm = document.getElementById('smsg');
+    if (!pf) return;
+    pf.style.width = steps[i] + '%';
+    if (sm) sm.textContent = msgs[i] || msgs[msgs.length - 1];
+    i++;
+    if (i < steps.length) setTimeout(tick, 950);
+    else setTimeout(function() { go(3); }, 600);
+  }
+  setTimeout(tick, 400);
+}
+
+/* ── AI analysis logic ── */
+function analyse() {
+  var t = (S.text || '').toLowerCase();
+  var c = S.checks;
+  var Fv = /fever|fire|chaud|lafyèv|lafyev|hot|température|temp|\b38\b|\b39\b|\b40\b/.test(t) || c.fever;
+  var Ne = /eat|appetite|food|hungry|manje|manger|refuse|no eat|not eat|don.t eat|won.t eat|pas manger/.test(t) || c.notEating;
+  var Di = /diarrhea|diarrh|dyare|loose|stomach|ventre/.test(t) || c.diarrhea;
+  var Vo = /vomit|throw up|vòmi|vomi/.test(t) || c.vomiting;
+  var Ra = /rash|skin|itch|spot|gratèl|bouton|éruption/.test(t) || c.rash;
+  var Co = /cough|breath|tous|toux|respir/.test(t) || c.cough;
+  var tm = t.match(/\b(38|39|40)(\.\d)?\b/);
+  var tv = tm ? tm[0] : null;
+
+  var d;
+  if (Fv && Ne && Di) {
+    d = { sev: 'complex', badge: 'Complex — urgent',
+      diag: 'Acute gastroenteritis with fever',
+      note: 'Fever, diarrhea and poor appetite together create a high risk of dehydration. Immediate action is needed.',
+      conf: 91, urg: 7,
+      acts: ['Give ORS (oral rehydration solution) every 5 minutes',
+             'Hold solid food until vomiting or diarrhea slows',
+             'Monitor temperature every 2 hours',
+             'Visit clinic or call health worker immediately'] };
+  } else if (Fv && Ne) {
+    d = { sev: 'complex', badge: 'Complex — see doctor',
+      diag: tv ? 'High fever (' + tv + '°C) with poor appetite' : 'Viral fever with reduced appetite',
+      note: 'Fever combined with not wanting to eat is common in viral illness but needs close monitoring.',
+      conf: 87, urg: 5,
+      acts: ['Give paracetamol at the correct child dose',
+             'Offer small sips of water or ORS every 10 minutes',
+             'Keep child resting in a cool, ventilated room',
+             'Visit clinic if no improvement within 24 hours'] };
+  } else if (Fv && Di) {
+    d = { sev: 'complex', badge: 'Complex — urgent',
+      diag: 'Gastroenteritis with fever',
+      note: 'Fever and diarrhea together can cause rapid dehydration, especially in young children.',
+      conf: 89, urg: 6,
+      acts: ['Start ORS solution immediately — small sips every 5 min',
+             'Avoid sugary drinks and fruit juice',
+             'Continue breastfeeding if child is under 2',
+             'Visit clinic today'] };
+  } else if (Fv && Vo) {
+    d = { sev: 'complex', badge: 'Complex — see doctor',
+      diag: 'Fever with vomiting',
+      note: 'Vomiting combined with fever increases dehydration risk and may indicate an infection.',
+      conf: 84, urg: 5,
+      acts: ['Offer ORS in very small, frequent sips',
+             'Keep child lying down and comfortable',
+             'Avoid solid food until vomiting stops',
+             'Visit clinic today'] };
+  } else if (Fv) {
+    d = { sev: tv ? 'complex' : 'moderate',
+      badge: tv ? 'Complex — see doctor' : 'Moderate — monitor closely',
+      diag: tv ? 'High fever (' + tv + '°C detected)' : 'Fever — possible viral infection',
+      note: 'Viral fever is very common in children. Watch closely for worsening symptoms.',
+      conf: 84, urg: tv ? 5 : 3,
+      acts: ['Give paracetamol at child dose',
+             'Apply cool damp cloth to forehead',
+             'Offer water or ORS every 15 minutes',
+             tv ? 'Visit clinic today' : 'Monitor for 12–24 hours and call if worse'] };
+  } else if (Ne) {
+    d = { sev: 'moderate', badge: 'Moderate — monitor',
+      diag: 'Poor appetite — possible early illness',
+      note: 'A child refusing to eat can be an early sign of infection, discomfort, or emotional stress.',
+      conf: 76, urg: 3,
+      acts: ['Offer small amounts of easy-to-eat foods',
+             'Ensure the child drinks water or ORS',
+             'Watch for fever or other new symptoms',
+             'Contact health worker if this lasts more than 2 days'] };
+  } else if (Di) {
+    d = { sev: 'moderate', badge: 'Moderate — monitor',
+      diag: 'Diarrhea — possible digestive infection',
+      note: 'Diarrhea is a leading cause of child illness in Haiti. ORS is the most important first treatment.',
+      conf: 82, urg: 4,
+      acts: ['Start ORS solution right away',
+             'Continue breastfeeding if applicable',
+             'Avoid fruit juices and sweet drinks',
+             'See doctor if lasting more than 2 days or blood appears'] };
+  } else if (Ra) {
+    d = { sev: 'simple', badge: 'Simple — self-care',
+      diag: 'Skin reaction — possible allergy or mild infection',
+      note: 'Most rashes in children are mild. Monitor for spreading or accompanying fever.',
+      conf: 78, urg: 2,
+      acts: ['Do not scratch or rub the affected area',
+             'Keep skin clean and dry',
+             'Avoid new soaps, foods, or lotions',
+             'See doctor if rash spreads quickly or child develops fever'] };
+  } else if (Co) {
+    d = { sev: 'simple', badge: 'Simple — self-care',
+      diag: 'Respiratory irritation — possible cold',
+      note: 'Most childhood coughs resolve within 7–10 days with supportive care at home.',
+      conf: 80, urg: 2,
+      acts: ['Keep child in a well-ventilated room',
+             'Offer warm fluids frequently',
+             'Honey can help if child is over 1 year old',
+             'See doctor if cough persists more than 5 days or breathing worsens'] };
+  } else {
+    d = { sev: 'simple', badge: 'Simple — observation needed',
+      diag: 'General discomfort — no severe symptoms detected',
+      note: 'No critical symptoms were identified. Keep monitoring your child closely.',
+      conf: 72, urg: 2,
+      acts: ['Keep child comfortable and resting',
+             'Ensure good hydration throughout the day',
+             'Monitor for new symptoms such as fever or rash',
+             'Contact your health worker if you remain concerned'] };
+  }
+  S.result = d;
+}
+
+/* ── Screen 4: Result ── */
+function s4() {
+  var r = S.result;
+  var bc = r.sev === 'complex' ? 'badge-u' : r.sev === 'moderate' ? 'badge-m' : 'badge-s';
+  var icon = r.sev === 'complex' ? '&#9888;' : r.sev === 'moderate' ? '&#9679;' : '&#10003;';
+  return '<div class="h2">' + L().result + '</div>'
+    + '<span class="' + bc + '">' + icon + ' ' + r.badge + '</span>'
+    + '<div class="r-card">'
+    +   '<div class="r-diag">' + r.diag + '</div>'
+    +   '<div class="r-note">' + r.note + '</div>'
+    + '</div>'
+    + '<div class="conf-row">'
+    +   '<span style="font-size:12px;color:#9ca3af;">Confidence:</span>'
+    +   '<span class="conf-val">' + r.conf + '%</span>'
+    +   '<span class="urg-chip">Urgency: ' + r.urg + ' / 10</span>'
+    + '</div>'
+    + '<div class="body-t" style="font-size:11px;color:#9ca3af;">' + L().disclaimer + '</div>'
+    + '<button class="btn-p" onclick="go(4)">' + L().seeplan + ' &#8594;</button>';
+}
+
+/* ── Screen 5: Action plan ── */
+function s5() {
+  var r = S.result;
+  var acts = r.acts.map(function(a, i) {
+    return '<div class="act-item">'
+      + '<div class="act-num">' + (i + 1) + '</div>'
+      + '<div class="act-txt">' + a + '</div>'
+      + '</div>';
+  }).join('');
+  return '<div class="h2">' + L().plan + '</div>'
+    + acts
+    + '<div class="notif">&#10003;&nbsp; ' + L().notif + '</div>'
+    + '<button class="btn-p" onclick="showToast(\'call\')">' + L().call + '</button>'
+    + '<button class="btn-s" onclick="showToast(\'wa\')">' + L().share + '</button>'
+    + '<button class="btn-ghost" onclick="resetApp()">' + L().restart + '</button>';
+}
+
+function showToast(type) {
+  var msg = type === 'call' ? L().call_msg : L().wa_msg;
+  var old = document.querySelector('.toast');
+  if (old) old.remove();
+  var el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  var content = document.getElementById('content');
+  content.insertBefore(el, content.firstChild);
+  setTimeout(function() { if (el.parentNode) el.remove(); }, 2800);
+}
+
+function resetApp() {
+  S = { lang: S.lang, age: '2-5', checks: {}, text: '', result: null };
+  go(0);
+}
+
+go(0);
+</script>
+</body>
+</html>
